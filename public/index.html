@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <title><%= htmlWebpackPlugin.options.title %></title>
+
+    <style>
+        /* 1. 清除所有根元素默认样式 */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100%;
+            overflow: auto;
+            /* 解决margin塌陷：给body添加最小padding或边框（任选其一） */
+            padding-top: 0 !important;
+            border-top: 0 !important;
+        }
+
+        /* 2. 全局盒模型统一，避免尺寸偏差 */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* 3. 隐藏滚动条（保持功能） */
+        html {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        html::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 4. 确保#app没有默认边距 */
+        #app {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+</head>
+<body>
+<noscript>
+    <strong>抱歉，<%= htmlWebpackPlugin.options.title %> 需要启用JavaScript才能正常运行，请开启后继续。</strong>
+</noscript>
+<div id="app"></div>
+
+<!-- 外部脚本 -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://gw.alipayobjects.com/render/p/yuyan_npm/@alipay_lakex-doc/1.24.0/umd/doc.umd.js"></script>
+</body>
+</html>

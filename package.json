@@ -1,0 +1,83 @@
+{
+  "name": "vue_project_2",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve --entry src/main.js",
+    "build": "vue-cli-service build --entry src/main.js",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@kangc/v-md-editor": "^2.3.18",
+    "axios": "^1.12.2",
+    "core-js": "^3.8.3",
+    "element-plus": "^2.11.4",
+    "highlight.js": "^11.11.1",
+    "marked": "^4.0.18",
+    "pinia": "^3.0.3",
+    "prismjs": "^1.30.0",
+    "vue": "^3.2.13",
+    "vue-router": "^4.6.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/eslint-parser": "^7.12.16",
+    "@babel/preset-env": "^7.28.3",
+    "@types/webpack": "^5.28.5",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "@vue/cli-plugin-babel": "~5.0.0",
+    "@vue/cli-plugin-eslint": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "@vue/eslint-config-standard": "^7.0.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-vue": "^8.7.1",
+    "webpack": "^5.0.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/vue3-essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "@babel/eslint-parser",
+      "requireConfigFile": false,
+      "ecmaVersion": 2020,
+      "sourceType": "module"
+    },
+    "overrides": [
+      {
+        "files": ["*.ts", "*.tsx"],
+        "parser": "@typescript-eslint/parser",
+        "plugins": ["@typescript-eslint"],
+        "extends": [
+          "plugin:@typescript-eslint/recommended"
+        ],
+        "parserOptions": {
+          "ecmaVersion": 2020,
+          "sourceType": "module"
+        }
+      },
+      {
+        "files": ["*.vue"],
+        "parser": "vue-eslint-parser",
+        "parserOptions": {
+          "parser": "@typescript-eslint/parser",
+          "ecmaVersion": 2020,
+          "sourceType": "module"
+        }
+      }
+    ],
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ]
+}
