@@ -57,9 +57,10 @@
 <script>
 import { ref, reactive, computed } from 'vue'
 import axios from 'axios'
-import { useIntersectionLoad } from '../utils/useIntersectionLoad'
+import { useIntersectionLoad } from '../../utils/useIntersectionLoad'
+import { getApiBaseUrl } from '../../utils/apiConfig'
 
-axios.defaults.baseURL = 'http://localhost:8080'
+axios.defaults.baseURL = getApiBaseUrl()
 axios.defaults.withCredentials = true
 
 const articleCache = new Map()
@@ -212,8 +213,8 @@ export default {
   width: 300px;
   border-radius: 12px;
   overflow: hidden;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  background: #1e1e1e;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   display: flex;
   flex-direction: column;
   cursor: pointer;
@@ -221,7 +222,16 @@ export default {
 }
 .card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+/* 链接样式 */
+.card-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* 4:3图片区（核心不变） */
@@ -229,7 +239,7 @@ export default {
   width: 100%;
   padding-bottom: 75%; /* 4:3比例 */
   position: relative;
-  background: #fafafa;
+  background: #2d2d2d;
 }
 .card-image {
   position: absolute;
@@ -246,7 +256,7 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background: #f6f6f6;
+  background: #2d2d2d;
 }
 
 /* 信息区（桌面端） */
@@ -260,7 +270,7 @@ export default {
 .card-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #111;
+  color: #e0e0e0;
   margin: 0;
   line-height: 1.3;
   display: -webkit-box;
@@ -274,7 +284,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   font-size: 0.85rem;
-  color: #666;
+  color: #999;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -288,6 +298,9 @@ export default {
   display: flex;
   gap: 6px;
   align-items: center;
+}
+.channel-name {
+  color: #ccc;
 }
 .avatar {
   width: 20px;
@@ -309,8 +322,8 @@ export default {
 .skeleton-image {
   width: 100%;
   padding-bottom: 75%;
-  background: #f6f6f6;
-  background-image: linear-gradient(90deg, #f6f6f6 25%, #efefef 37%, #f6f6f6 63%);
+  background: #2d2d2d;
+  background-image: linear-gradient(90deg, #2d2d2d 25%, #3a3a3a 37%, #2d2d2d 63%);
   background-size: 400% 100%;
   animation: shimmer 1.2s linear infinite;
 }
@@ -322,9 +335,9 @@ export default {
 }
 .skeleton-line {
   height: 12px;
-  background: #f6f6f6;
+  background: #2d2d2d;
   border-radius: 6px;
-  background-image: linear-gradient(90deg, #f6f6f6 25%, #efefef 37%, #f6f6f6 63%);
+  background-image: linear-gradient(90deg, #2d2d2d 25%, #3a3a3a 37%, #2d2d2d 63%);
   background-size: 400% 100%;
   animation: shimmer 1.2s linear infinite;
 }
@@ -338,8 +351,8 @@ export default {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #c0392b;
-  background: #fff6f6;
+  color: #ff6b6b;
+  background: #2d1e1e;
   padding: 16px;
   text-align: center;
 }
@@ -347,15 +360,15 @@ export default {
   margin-top: 12px;
   padding: 6px 12px;
   border-radius: 6px;
-  border: 1px solid #c0392b;
-  background: #fff;
-  color: #c0392b;
+  border: 1px solid #ff6b6b;
+  background: #1e1e1e;
+  color: #ff6b6b;
   cursor: pointer;
   transition: all 0.2s;
 }
 .retry-btn:hover {
-  background: #c0392b;
-  color: #fff;
+  background: #ff6b6b;
+  color: #1e1e1e;
 }
 
 .publisher-error {
@@ -365,15 +378,16 @@ export default {
   align-items: center;
 }
 .publisher-error-text {
-  color: #b93a3a;
+  color: #ff6b6b;
   font-size: 12px;
 }
 .retry-small {
   font-size: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #555;
   padding: 3px 6px;
   border-radius: 4px;
-  background: #fff;
+  background: #1e1e1e;
+  color: #ccc;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -392,7 +406,7 @@ export default {
   .card {
     width: 100% !important; /* 占满父容器宽度 */
     max-width: 300px; /* 限制最大宽度，避免大屏手机过宽 */
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05); /* 弱化阴影，更简洁 */
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3); /* 弱化阴影，更简洁 */
   }
 
   /* 图片区：保持4:3，优化圆角 */

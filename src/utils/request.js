@@ -1,9 +1,10 @@
 import axios from "axios";
+import { getApiBaseUrl } from "./apiConfig";
 
 // 创建 axios 实例
 const service = axios.create({
-    baseURL: "http://localhost:8080", // ✅ 修改为你 Spring Boot 的运行地址
-    timeout: 10000 // 请求超时时间
+    baseURL: getApiBaseUrl(),
+    timeout: 10000
 });
 
 // 请求拦截器（可选）

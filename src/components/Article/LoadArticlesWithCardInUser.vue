@@ -32,11 +32,12 @@
 <script>
 import { onMounted, reactive, toRefs, computed, ref } from 'vue';
 import axios from 'axios';
-import userApi from "../api/user";
+import userApi from "../../api/user";
 import { ElMessage } from 'element-plus';
 import CardArticle from "./CardArticle.vue";
+import { getApiBaseUrl } from '../../utils/apiConfig';
 
-axios.defaults.baseURL = 'http://localhost:8080';
+axios.defaults.baseURL = getApiBaseUrl();
 axios.defaults.withCredentials = true;
 
 export default {

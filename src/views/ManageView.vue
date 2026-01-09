@@ -294,7 +294,7 @@
 <script>
 import axios from "axios";
 import _ from "lodash";
-import MarkdownEditor from "@/components/MarkdownEditor.vue";
+import MarkdownEditor from "@/components/Article/MarkdownEditor.vue";
 import { ArrowLeft, ArrowRight } from "@element-plus/icons-vue";
 
 export default {

@@ -3,19 +3,19 @@
 <script>
 
 
-import LoadArticlesWithCard2 from "../components/LoadArticlesWithCard.vue";
+import LoadArticlesWithCard_UseCateGory from "@/components/Article/LoadArticlesWithCard_UseCateGory.vue";
 
 export default {
   name: 'LifeLogView',
   components: {
-    LoadArticlesWithCard2
+    LoadArticlesWithCard_UseCateGory,
   }
 }
 
 </script>
 
 <template>
-  <load-articles-with-card2></load-articles-with-card2>
+  <LoadArticlesWithCard_UseCateGory :category-id="1" style="padding-top: 80PX"></LoadArticlesWithCard_UseCateGory>
 </template>
 
 

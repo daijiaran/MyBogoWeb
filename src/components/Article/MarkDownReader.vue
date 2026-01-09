@@ -67,10 +67,13 @@ const loadScripts = () => {
 // 初始化阅读器并设置内容
 const initViewer = (content) => {
   if (viewerContainer.value && window.Doc) {
+
     // 销毁旧实例（避免重复创建）
     if (viewer && viewer.destroy) viewer.destroy();
     // 创建新实例
-    viewer = window.Doc.createOpenViewer(viewerContainer.value, {});
+    viewer = window.Doc.createOpenViewer(viewerContainer.value, {
+      darkMode: true
+    });
     // 设置内容（使用父组件传递的content）
     viewer.setDocument('text/lake', content || '<p>无正文内容</p>');
   }

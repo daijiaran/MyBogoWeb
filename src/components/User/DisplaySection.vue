@@ -180,8 +180,8 @@ onBeforeUnmount(stopAuto)
   position: absolute;
   top: 60px;
   left: 20px;
-  color: #6e6e6e;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  color: #e0e0e0;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
   z-index: 2;
 }
 
@@ -191,11 +191,11 @@ onBeforeUnmount(stopAuto)
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #595959;
+  color: #999;
 }
 
 .status.error {
-  color: #ffcaca;
+  color: #ff6b6b;
 }
 
 .indicators {
@@ -211,7 +211,7 @@ onBeforeUnmount(stopAuto)
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: rgba(83, 83, 83, 0.5);
+  background: rgba(150, 150, 150, 0.5);
   transition: all 0.3s;
   cursor: pointer;
 }
@@ -219,6 +219,6 @@ onBeforeUnmount(stopAuto)
 .dot.active {
   width: 28px;
   border-radius: 6px;
-  background: #fafafa;
+  background: #4fc3f7;
 }
 </style>

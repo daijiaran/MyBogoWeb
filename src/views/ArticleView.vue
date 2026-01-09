@@ -1,33 +1,94 @@
 <template>
   <div class="article-view">
     <div class="container">
-      <!-- 左侧浏览区 - 添加ref和缩放样式 -->
+      <!-- 左侧浏览区 -->
       <div
           class="left-panel"
           :style="{ width: leftPanelWidth + '%' }"
           ref="leftPanelRef"
       >
         <div class="markdown-view">
-          <!-- 缩放容器：只对该容器内内容缩放 -->
+          <!-- 缩放容器 -->
           <div
               class="content-wrapper"
               :style="{
                 transform: `scale(${scaleRatio})`,
                 transformOrigin: 'top center',
                 transition: 'transform 0.2s ease',
-                // 保持布局稳定，缩放不影响外层滚动
                 display: 'inline-block',
                 width: '100%',
                 boxSizing: 'border-box'
               }"
           >
+            <!-- 移动端专属：封面展示 -->
+            <div v-if="isMobile" class="mobile-cover-section">
+              <div class="cover-card">
+                <img
+                    :src="article.coverUrl ? `${apiBaseUrl}${article.coverUrl}` : ''"
+                    class="cover-image"
+                    v-if="article.coverUrl"
+                    :alt="article.title"
+                />
+                <div class="cover-overlay" v-if="!article.coverUrl"></div>
+                <h2 class="cover-title" v-if="!article.coverUrl">封面</h2>
+              </div>
+            </div>
+
+            <!-- 移动端专属：摘要展示 -->
+            <div v-if="isMobile" class="mobile-abstract-section">
+              <div class="info-card abstract-card">
+                <label class="info-label">摘要</label>
+                <div class="abstract-content">
+                  {{ article.summary }}
+                </div>
+              </div>
+            </div>
+
+            <!-- 通用内容区域 -->
             <h1 class="main-title">{{ article.title }}</h1>
-            <p class="intro-text">
+            <p class="intro-text" v-if="!isMobile">
               {{ article.summary }}
             </p>
 
             <div class="divider"></div>
             <mark-down-reader :content="article.content"></mark-down-reader>
+
+            <!-- 移动端专属：评论输入和评论区 -->
+            <div v-if="isMobile" class="mobile-comment-section">
+              <!-- 评论输入栏 -->
+              <div class="reply-input-container" :style="{ width: '100%' }">
+                <div class="reply-input">
+                  <div class="reply-input-content">
+                    <textarea
+                        ref="mobileCommentTextareaRef"
+                        v-model="commentText"
+                        class="comment-textarea"
+                        placeholder="输入你的评论..."
+                        maxlength="500"
+                        @keydown.ctrl.enter="handleSubmitComment"
+                        @keydown.meta.enter="handleSubmitComment"
+                        @input="autoResizeTextarea"
+                    ></textarea>
+                    <button
+                        class="submit-btn"
+                        @click="handleSubmitComment"
+                        :disabled="!commentText.trim() || isSubmitting"
+                    >
+                      {{ isSubmitting ? '发送中...' : '发送' }}
+                    </button>
+                  </div>
+                  <div class="reply-input-footer">
+                    <span class="char-count">{{ commentText.length }}/500</span>
+                    <span class="shortcut-tip">Ctrl+Enter 快速发送</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 评论区 -->
+              <div class="other-card">
+                <comment-section :article-key="String(article.id || route.params.id || '')"></comment-section>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -37,23 +98,25 @@
           class="resizer"
           @mousedown="startDrag"
           :class="{ 'resizing': isDragging }"
+          v-if="!isMobile"
       >
         <div class="resizer-dot"></div>
       </div>
 
-      <!-- 右侧信息区 -->
+      <!-- 右侧信息区（桌面端专属） -->
       <div
           class="right-panel"
           :style="{
             width: rightPanelWidth + '%',
             '--right-panel-width-value': rightPanelWidth + '%'
           }"
+          v-if="!isMobile"
       >
         <div class="info-container">
           <!-- 封面区域 -->
           <div class="cover-card">
             <img
-                :src="article.coverUrl ? `http://localhost:8080${article.coverUrl}` : ''"
+                :src="article.coverUrl ? `${apiBaseUrl}${article.coverUrl}` : ''"
                 class="cover-image"
                 v-if="article.coverUrl"
                 :alt="article.title"
@@ -76,23 +139,23 @@
             </div>
           </div>
 
-          <!-- 评论输入栏 - 固定在右侧面板底部 -->
+          <!-- 评论输入栏 -->
           <div
               class="reply-input-container"
               :style="{ width: replyInputWidth-50 + 'px' }"
           >
             <div class="reply-input">
               <div class="reply-input-content">
-          <textarea
-              ref="commentTextareaRef"
-              v-model="commentText"
-              class="comment-textarea"
-              placeholder="输入你的评论..."
-              maxlength="500"
-              @keydown.ctrl.enter="handleSubmitComment"
-              @keydown.meta.enter="handleSubmitComment"
-              @input="autoResizeTextarea"
-          ></textarea>
+                <textarea
+                    ref="commentTextareaRef"
+                    v-model="commentText"
+                    class="comment-textarea"
+                    placeholder="输入你的评论..."
+                    maxlength="500"
+                    @keydown.ctrl.enter="handleSubmitComment"
+                    @keydown.meta.enter="handleSubmitComment"
+                    @input="autoResizeTextarea"
+                ></textarea>
                 <button
                     class="submit-btn"
                     @click="handleSubmitComment"
@@ -110,18 +173,16 @@
         </div>
 
         <!-- 评论区 -->
-        <!-- 传入文章的ID -->
         <div class="other-card">
           <comment-section :article-key="String(article.id || route.params.id || '')"></comment-section>
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted, onUnmounted, watch, nextTick} from 'vue';
+import {ref, onMounted, onUnmounted, nextTick, watch} from 'vue';
 import {useRoute} from 'vue-router';
 import {getArticleDetail} from '../api/article';
 import {createComment} from '../api/comment';
@@ -130,8 +191,9 @@ import { ElMessage as Message } from 'element-plus';
 import * as marked from 'marked';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css';
-import MarkDownReader from "../components/MarkDownReader.vue";
+import MarkDownReader from "@/components/Article/MarkDownReader.vue";
 import CommentSection from "../components/Comment/CommentSection.vue";
+import { getApiBaseUrl } from '../utils/apiConfig';
 
 // 配置 markdown 渲染
 marked.marked.setOptions({
@@ -149,6 +211,9 @@ marked.marked.setOptions({
 const route = useRoute();
 const userStore = useUserStore();
 
+// API 基础地址
+const apiBaseUrl = getApiBaseUrl();
+
 // 文章数据
 const article = ref({
   id: null,
@@ -157,13 +222,20 @@ const article = ref({
   coverUrl: '',
   content: '',
   status: '',
-  publisherId: '' // 与后端字段名一致
+  publisherId: ''
 });
+
+// 移动端检测
+const isMobile = ref(false);
+const checkIsMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
 
 // 评论输入相关
 const commentText = ref('');
 const isSubmitting = ref(false);
 const commentTextareaRef = ref(null);
+const mobileCommentTextareaRef = ref(null);
 
 // 面板宽度状态
 const leftPanelWidth = ref(80);
@@ -171,11 +243,11 @@ const rightPanelWidth = ref(20);
 const isDragging = ref(false);
 const replyInputWidth = ref(0);
 
-// 左侧浏览区缩放相关状态 - 新增
-const leftPanelRef = ref(null); // 左侧面板DOM引用
-const scaleRatio = ref(1.0); // 缩放比例（默认100%）
-const scaleStep = ref(0.1); // 缩放步长（每次10%）
-const isCtrlPressed = ref(false); // Ctrl键是否按下
+// 左侧浏览区缩放相关状态
+const leftPanelRef = ref(null);
+const scaleRatio = ref(1.0);
+const scaleStep = ref(0.1);
+const isCtrlPressed = ref(false);
 
 // 获取文章详情
 const fetchArticleDetail = async () => {
@@ -201,24 +273,21 @@ const fetchArticleDetail = async () => {
     const missingFields = requiredFields.filter(field => articleData[field] === undefined);
     if (missingFields.length > 0) throw new Error(`文章数据缺少核心字段：${missingFields.join(', ')}`);
 
-    // 修正：校验后端返回的 publisherId 字段（而非 publisher）
     if (!articleData.publisherId) {
       console.warn(`警告：文章ID ${articleId} 缺少 publisherId 字段（作者ID），无法发表评论`);
       Message.warning('文章作者信息不完整，可能无法发表评论');
     }
 
-    // 修正：赋值 publisherId（与后端字段一致）
     article.value = {
       ...articleData,
       summary: articleData.summary || articleData.abstract || articleData.description || '',
-      publisherId: articleData.publisherId || '' // 关键：接收后端的 publisherId 字段
+      publisherId: articleData.publisherId || ''
     };
     errorMsg.value = '';
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '未知错误';
     errorMsg.value = errorMessage;
-    // 修正：错误重置时补充 publisherId 字段
     article.value = {
       id: null,
       title: '',
@@ -226,7 +295,7 @@ const fetchArticleDetail = async () => {
       coverUrl: '',
       content: '',
       status: '',
-      publisherId: '' // 同步修改
+      publisherId: ''
     };
   } finally {
     loading.value = false;
@@ -234,7 +303,8 @@ const fetchArticleDetail = async () => {
 
   return {loading, errorMsg};
 };
-// 分隔线拖动逻辑（原有）
+
+// 分隔线拖动逻辑
 const startDrag = (e) => {
   isDragging.value = true;
   e.preventDefault();
@@ -262,7 +332,7 @@ const stopDrag = () => {
   document.body.style.cursor = '';
 };
 
-// 更新评论输入栏宽度（原有）
+// 更新评论输入栏宽度
 const updateReplyInputWidth = () => {
   nextTick(() => {
     const rightPanel = document.querySelector('.right-panel');
@@ -277,46 +347,43 @@ watch(rightPanelWidth, () => {
   updateReplyInputWidth();
 }, {immediate: false});
 
-// 左侧浏览区缩放逻辑 - 新增
+// 左侧浏览区缩放逻辑
 const handleKeyDown = (e) => {
-  // 监听Ctrl键按下
   if (e.ctrlKey || e.metaKey) {
     isCtrlPressed.value = true;
   }
 };
 
 const handleKeyUp = (e) => {
-  // 监听Ctrl键松开
   if (!e.ctrlKey && !e.metaKey) {
     isCtrlPressed.value = false;
   }
 };
 
 const handleLeftPanelWheel = (e) => {
-  // 仅当Ctrl键按下且在左侧面板内滚动时生效
   if (isCtrlPressed.value) {
     e.preventDefault();
     e.stopPropagation();
 
-    // 滚轮向上：放大，向下：缩小
     const delta = e.deltaY > 0 ? -scaleStep.value : scaleStep.value;
-    // 限制缩放范围：0.5-2.0（50%-200%）
     scaleRatio.value = Math.min(Math.max(scaleRatio.value + delta, 0.5), 2.0);
   }
 };
 
-// 自动调整textarea高度（原有）
+// 自动调整textarea高度
 const autoResizeTextarea = () => {
   nextTick(() => {
-    const textarea = commentTextareaRef.value;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      const minHeight = 100;
-      const newHeight = Math.max(minHeight, textarea.scrollHeight);
-      const maxHeight = 200;
-      textarea.style.height = Math.min(newHeight, maxHeight) + 'px';
-      textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
-    }
+    const textareas = [commentTextareaRef.value, mobileCommentTextareaRef.value].filter(Boolean);
+    textareas.forEach(textarea => {
+      if (textarea) {
+        textarea.style.height = 'auto';
+        const minHeight = 100;
+        const newHeight = Math.max(minHeight, textarea.scrollHeight);
+        const maxHeight = 200;
+        textarea.style.height = Math.min(newHeight, maxHeight) + 'px';
+        textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+      }
+    });
   });
 };
 
@@ -325,19 +392,16 @@ const handleSubmitComment = async () => {
   const text = commentText.value.trim();
   if (!text || isSubmitting.value) return;
 
-  // 修正：校验 publisherId（而非 publisher）
   if (!article.value.publisherId) {
     Message.error('文章作者信息缺失，无法发表评论');
-    return; // 直接阻断提交，避免向后端传递空的replyUserId
+    return;
   }
 
-  // 检查用户是否登录（原有逻辑保留）
   if (!userStore.isLogin || !userStore.userId) {
     Message.warning('请先登录后再发表评论');
     return;
   }
 
-  // 检查文章ID是否存在（原有逻辑保留）
   const articleId = article.value.id || route.params.id;
   if (!articleId) {
     Message.error('文章ID不存在，无法发表评论');
@@ -351,54 +415,48 @@ const handleSubmitComment = async () => {
       content: text,
       articleId: String(articleId),
       userId: userStore.userId,
-      parentId: null, // 顶级评论，没有父评论
-      replyUserId: article.value.publisherId // 修正：使用 publisherId 作为回复目标ID
+      parentId: null,
+      replyUserId: article.value.publisherId
     };
 
     const result = await createComment(commentData);
 
-    // 处理API响应（根据实际后端返回格式调整）
     if (result && (result.code === 200 || result.id)) {
-      // Message.success('评论发表成功');
       commentText.value = '';
-      if (commentTextareaRef.value) {
-        commentTextareaRef.value.style.height = '100px';
-        commentTextareaRef.value.style.overflowY = 'hidden';
-      }
-      
-      // 关键修改：将新评论数据通过事件传递
-      // 优先使用接口返回的数据，如果接口返回了完整评论数据则使用，否则构造新评论对象
+      const textareas = [commentTextareaRef.value, mobileCommentTextareaRef.value].filter(Boolean);
+      textareas.forEach(textarea => {
+        if (textarea) {
+          textarea.style.height = '100px';
+          textarea.style.overflowY = 'hidden';
+        }
+      });
+
       let newComment;
       if (result.data && result.data.id) {
-        // 如果接口返回了完整的评论数据
         newComment = result.data;
-        // 确保有 createdAt 字段（兼容 createTime）
         if (!newComment.createdAt && newComment.createTime) {
           newComment.createdAt = newComment.createTime;
         } else if (!newComment.createdAt) {
           newComment.createdAt = new Date().toISOString();
         }
       } else {
-        // 否则根据接口返回的ID和当前数据构造新评论对象
         const now = new Date().toISOString();
         newComment = {
-          id: result.id || result.data?.id, // 评论ID
-          content: text, // 评论内容
-          userId: userStore.userId, // 当前用户ID
+          id: result.id || result.data?.id,
+          content: text,
+          userId: userStore.userId,
           articleId: String(articleId),
           parentId: null,
           replyUserId: article.value.publisherId,
-          createdAt: result.data?.createdAt || result.data?.createTime || now, // 使用 createdAt 字段（CommentCard 使用此字段）
-          // 补充用户名等必要字段
+          createdAt: result.data?.createdAt || result.data?.createTime || now,
           user: {
             id: userStore.userId,
-            name: userStore.username || '匿名用户', // userStore 使用 username 字段
+            name: userStore.username || '匿名用户',
             avatarUrl: userStore.avatarUrl || '/user-avatar.png'
           }
         };
       }
-      
-      // 触发事件时携带新评论数据
+
       window.dispatchEvent(new CustomEvent('comment-submitted-root', {
         detail: newComment
       }));
@@ -407,7 +465,6 @@ const handleSubmitComment = async () => {
     }
   } catch (error) {
     console.error('发表评论失败:', error);
-    // 原有错误处理逻辑保留（优化空值判断）
     const errorMsg = error
         ? (error.response?.data?.message || error.message || '发表评论失败，请重试')
         : '发表评论失败，请重试';
@@ -416,239 +473,124 @@ const handleSubmitComment = async () => {
     isSubmitting.value = false;
   }
 };
-// 挂载时初始化（新增缩放事件监听）
+
+// 窗口大小变化处理
+const handleResize = () => {
+  checkIsMobile();
+  updateReplyInputWidth();
+};
+
+// 挂载时初始化
 onMounted(() => {
-  // 原有事件监听
+  checkIsMobile();
+
   document.addEventListener('mousemove', handleDrag);
   document.addEventListener('mouseup', stopDrag);
-  fetchArticleDetail();
-  window.addEventListener('resize', updateReplyInputWidth);
-  setTimeout(() => {
-    updateReplyInputWidth();
-    if (commentTextareaRef.value) {
-      commentTextareaRef.value.style.height = '100px';
-    }
-  }, 200);
-
-  // 新增缩放相关事件监听
+  window.addEventListener('resize', handleResize);
   document.addEventListener('keydown', handleKeyDown);
   document.addEventListener('keyup', handleKeyUp);
-  // 仅给左侧面板添加滚轮事件
+
   if (leftPanelRef.value) {
     leftPanelRef.value.addEventListener('wheel', handleLeftPanelWheel, {passive: false});
   }
+
+  fetchArticleDetail();
+
+  setTimeout(() => {
+    updateReplyInputWidth();
+    const textareas = [commentTextareaRef.value, mobileCommentTextareaRef.value].filter(Boolean);
+    textareas.forEach(textarea => {
+      if (textarea) {
+        textarea.style.height = '100px';
+      }
+    });
+  }, 200);
+
+  window.dispatchEvent(new CustomEvent('toggle-navbar', {
+    detail: {collapsed: true}
+  }));
 });
 
-// 卸载时清理（新增缩放事件移除）
+// 卸载时清理
 onUnmounted(() => {
-  // 原有事件移除
   document.removeEventListener('mousemove', handleDrag);
   document.removeEventListener('mouseup', stopDrag);
-  window.removeEventListener('resize', updateReplyInputWidth);
-
-  // 新增缩放相关事件移除
+  window.removeEventListener('resize', handleResize);
   document.removeEventListener('keydown', handleKeyDown);
   document.removeEventListener('keyup', handleKeyUp);
+
   if (leftPanelRef.value) {
     leftPanelRef.value.removeEventListener('wheel', handleLeftPanelWheel);
   }
+
+  window.dispatchEvent(new CustomEvent('toggle-navbar', {
+    detail: {collapsed: false}
+  }));
 });
 </script>
 
 <style>
-
-/* 评论输入栏主体 - 毛玻璃核心样式 */
-.reply-input {
-  background-color: rgba(255, 255, 255, 0); /* 半透明白色，保证毛玻璃通透感 */
-  backdrop-filter: blur(10px); /* 核心模糊效果 */
-  -webkit-backdrop-filter: blur(10px); /* Safari 兼容 */
-  border: 1px solid rgba(255, 255, 255, 0); /* 半透明白边，增强玻璃质感 */
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 16px;
-  display: flex;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-/* 输入框+按钮容器 - 优化布局 */
-.reply-input-content {
-  width: 100%;
-  flex: 1;
-  display: flex;
-  align-items: flex-end; /* 按钮与输入框底部对齐 */
-  gap: 8px; /* 输入框与按钮间距 */
-}
-
-/* 评论输入框 - 自适应高度+质感优化 */
-.comment-textarea {
-  flex: 1; /* 占满剩余宽度 */
-  min-height: 56px; /* 优化基础高度，更舒适 */
-  max-height: 150px; /* 合理最大高度，避免过高 */
-  padding: 12px 14px;
-  border: 1px solid rgba(203, 213, 225, 0.6); /* 半透明边框 */
+/* 移动端顶部区域样式 */
+.mobile-cover-section {
+  margin-bottom: 20px;
   border-radius: 8px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #1e293b;
-  background-color: rgba(248, 250, 252, 0.7); /* 输入框轻微毛玻璃 */
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  resize: none;
-  font-family: inherit;
-  box-sizing: border-box;
-  transition: all 0.2s ease;
-  overflow-y: hidden; /* 隐藏滚动条，自适应高度 */
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* 输入框聚焦状态 - 增强反馈 */
-.comment-textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* 更明显的聚焦阴影 */
-  background-color: rgba(255, 255, 255, 0.9); /* 聚焦时背景更实，提升可读性 */
+.mobile-abstract-section {
+  margin-bottom: 30px;
 }
 
-.comment-textarea::placeholder {
-  color: #94a3b8;
-  font-size: 13px;
+.mobile-comment-section {
+  margin-top: 40px;
+  border-top: 1px solid #555;
+  padding-top: 30px;
 }
 
-/* 底部信息栏 - 优化布局和提示 */
-.reply-input-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-  margin-top: 2px;
-  font-size: 11px;
-}
-
-.char-count {
-  color: #94a3b8;
-  font-weight: 500;
-}
-
-/* 快捷键提示 - 新增，提升交互体验 */
-.shortcut-tip {
-  color: #64748b;
+/* 移动端封面卡片调整 */
+.mobile-cover-section .cover-card {
+  height: auto;
+  min-height: 200px;
+  background-color: #2d2d2d;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  position: relative;
 }
 
-.shortcut-tip::before {
-  content: '';
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: #94a3b8;
+.mobile-cover-section .cover-image {
+  max-height: 250px;
+  width: 100%;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
-/* 发送按钮 - 优化尺寸和质感 */
-.submit-btn {
-  padding: 8px 20px; /* 调整padding，适配不同宽度 */
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* 更细腻的过渡曲线 */
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
-  flex-shrink: 0; /* 防止按钮被挤压 */
-  white-space: nowrap; /* 避免按钮文字换行 */
+/* 移动端摘要卡片调整 */
+.mobile-abstract-section .abstract-card {
+  background-color: #2d2d2d;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+/* 移动端评论区域调整 */
+.mobile-comment-section .reply-input-container {
+  width: 100% !important;
+  margin-bottom: 30px;
 }
 
-.submit-btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
-}
-
-.submit-btn:disabled {
-  background: #f1f5f9;
-  color: #94a3b8;
-  cursor: not-allowed;
-  opacity: 0.9;
-  box-shadow: none;
-}
-
-/* 为评论区添加底部padding，避免被输入栏遮挡 */
-.other-card {
-  padding-bottom: 140px !important; /* 适配容器最小高度+内边距，留出足够空间 */
-  box-sizing: border-box;
-}
-
-/* 响应式优化 - 分断点细化适配 */
-@media (max-width: 1024px) {
-  .reply-input-container {
-    width: 25% !important; /* 适配右侧面板宽度变化 */
-  }
-}
-
-@media (max-width: 768px) {
-  .reply-input-container {
-    min-width: 100%;
-    right: 0;
-    left: 0;
-    padding: 8px 12px;
-    min-height: 120px;
-  }
-
-  .reply-input {
-    padding: 14px 16px;
-    gap: 10px;
-  }
-
-  .comment-textarea {
-    font-size: 15px;
-    min-height: 60px;
-  }
-
-  .submit-btn {
-    padding: 9px 24px;
-    font-size: 14px;
-  }
-
-  .shortcut-tip {
-    display: none; /* 移动端隐藏快捷键提示，节省空间 */
-  }
-}
-
-@media (max-width: 480px) {
-  .reply-input-content {
-    flex-direction: column; /* 移动端输入框和按钮垂直排列 */
-    align-items: stretch;
-  }
-
-  .submit-btn {
-    width: 100%;
-    padding: 10px;
-  }
-
-  .comment-textarea {
-    font-size: 16px;
-    min-height: 64px;
-  }
-
-  .other-card {
-    padding-bottom: 160px !important; /* 适配移动端垂直布局的高度 */
-  }
+.mobile-comment-section .other-card {
+  padding-bottom: 20px !important;
 }
 
 /* 基础样式 */
 .article-view {
   width: 100vw;
-  height: 93vh;
+  height: 100vh;
   overflow: hidden;
-  background-color: #f5f7fa;
+  background-color: #1a1a1a;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -662,8 +604,8 @@ onUnmounted(() => {
 .left-panel {
   height: 100%;
   overflow: hidden;
-  background-color: #ffffff;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.03);
+  background-color: #1e1e1e;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   transition: width 0s ease;
 }
 
@@ -671,8 +613,7 @@ onUnmounted(() => {
   height: 100%;
   overflow-y: auto;
   padding: 0;
-  -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
-  /* 确保缩放后内容不会溢出面板 */
+  -webkit-overflow-scrolling: touch;
   position: relative;
 }
 
@@ -681,11 +622,9 @@ onUnmounted(() => {
   margin: 0 auto;
   padding: 40px 30px;
   line-height: 1.7;
-  color: #333842;
-  /* 修复缩放后文字模糊问题 */
+  color: #e0e0e0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  /* 确保缩放时内容居中对齐 */
   box-sizing: border-box;
 }
 
@@ -693,26 +632,26 @@ onUnmounted(() => {
   font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 16px;
-  color: #1a1d23;
+  color: #e0e0e0;
   letter-spacing: -0.02em;
 }
 
 .intro-text {
   font-size: 1.1rem;
-  color: #64748b;
+  color: #999;
   margin-bottom: 30px;
 }
 
 .divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+  background: linear-gradient(90deg, transparent, #555, transparent);
   margin: 30px 0;
 }
 
 h2 {
   font-size: 1.6rem;
   margin: 30px 0 15px;
-  color: #1e293b;
+  color: #e0e0e0;
   position: relative;
   padding-bottom: 8px;
 }
@@ -724,28 +663,28 @@ h2::after {
   bottom: 0;
   width: 40px;
   height: 3px;
-  background-color: #ffffff;
+  background-color: #4fc3f7;
   border-radius: 2px;
 }
 
 h3 {
   font-size: 1.3rem;
   margin: 25px 0 12px;
-  color: #1e293b;
+  color: #e0e0e0;
 }
 
 .feature-card {
-  background-color: #f8fafc;
+  background-color: #2d2d2d;
   border-radius: 8px;
   padding: 20px;
   margin: 20px 0;
-  border-left: 4px solid #ffffff;
+  border-left: 4px solid #4fc3f7;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .feature-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .feature-list {
@@ -760,19 +699,19 @@ h3 {
 
 .feature-list li::before {
   content: '•';
-  color: #ffffff;
+  color: #4fc3f7;
   font-weight: bold;
   position: absolute;
   left: -20px;
 }
 
 .quote-block {
-  border-left: 3px solid #94a3b8;
+  border-left: 3px solid #4fc3f7;
   padding: 15px 20px;
   margin: 25px 0;
-  background-color: #f1f5f9;
+  background-color: #2d2d2d;
   border-radius: 0 4px 4px 0;
-  color: #334155;
+  color: #ccc;
   font-style: italic;
 }
 
@@ -784,13 +723,13 @@ h3 {
 }
 
 .content-section:hover {
-  background-color: #f8fafc;
+  background-color: #2d2d2d;
 }
 
 /* 分隔线样式 */
 .resizer {
   width: 4px;
-  background-color: #e2e8f0;
+  background-color: #555;
   cursor: col-resize;
   user-select: none;
   transition: all 0.2s ease;
@@ -799,11 +738,11 @@ h3 {
 }
 
 .resizer:hover {
-  background-color: #94a3b8;
+  background-color: #777;
 }
 
 .resizer.resizing {
-  background-color: #ffffff;
+  background-color: #4fc3f7;
   width: 6px;
 }
 
@@ -815,10 +754,10 @@ h3 {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: #ffffff;
+  background-color: #4fc3f7;
   opacity: 0;
   transition: all 0s ease;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.3);
 }
 
 .resizer:hover .resizer-dot {
@@ -830,10 +769,10 @@ h3 {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: #f8fafc;
+  background-color: #1a1a1a;
   transition: width 0s ease;
-  border-left: 1px solid #e2e8f0;
-  -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+  border-left: 1px solid #555;
+  -webkit-overflow-scrolling: touch;
 }
 
 .info-container {
@@ -847,8 +786,8 @@ h3 {
 
 /* 封面样式 */
 .cover-card {
-  height: auto; /* 取消固定高度，由图片高度决定 */
-  min-height: 220px; /* 最小高度保证容器美观 */
+  height: auto;
+  min-height: 220px;
 }
 
 .cover-overlay {
@@ -873,16 +812,16 @@ h3 {
 
 /* 信息卡片通用样式 */
 .info-card {
-  background-color: white;
+  background-color: #2d2d2d;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .info-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
 .info-label {
@@ -890,7 +829,7 @@ h3 {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #94a3b8;
+  color: #999;
   margin-bottom: 10px;
   font-weight: 500;
 }
@@ -904,7 +843,7 @@ h3 {
 .title-content {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #e0e0e0;
   line-height: 1.4;
 }
 
@@ -915,7 +854,7 @@ h3 {
 }
 
 .abstract-content {
-  color: #475569;
+  color: #ccc;
   line-height: 1.6;
   font-size: 0.95rem;
 }
@@ -928,13 +867,13 @@ h3 {
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  background-color: #fefefe;
+  background-color: #1e1e1e;
   text-align: center;
   padding: 30px 20px;
 }
 
 .other-text {
-  color: #64748b;
+  color: #999;
   margin-bottom: 15px;
   font-size: 1rem;
 }
@@ -943,7 +882,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #94a3b8;
+  color: #999;
   font-size: 0.85rem;
 }
 
@@ -954,6 +893,128 @@ h3 {
   background-color: #f59e0b;
 }
 
+/* 评论输入栏主体 */
+.reply-input {
+  background-color: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(100, 100, 100, 0.3);
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  display: flex;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.reply-input-content {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.comment-textarea {
+  flex: 1;
+  min-height: 56px;
+  max-height: 150px;
+  padding: 12px 14px;
+  border: 1px solid rgba(100, 100, 100, 0.5);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e0e0e0;
+  background-color: rgba(45, 45, 45, 0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  resize: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  overflow-y: hidden;
+}
+
+.comment-textarea:focus {
+  outline: none;
+  border-color: #4fc3f7;
+  box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+  background-color: rgba(45, 45, 45, 0.95);
+}
+
+.comment-textarea::placeholder {
+  color: #888;
+  font-size: 13px;
+}
+
+.reply-input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.char-count {
+  color: #999;
+  font-weight: 500;
+}
+
+.shortcut-tip {
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shortcut-tip::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #999;
+}
+
+.submit-btn {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
+}
+
+.submit-btn:disabled {
+  background: #2d2d2d;
+  color: #666;
+  cursor: not-allowed;
+  opacity: 0.9;
+  box-shadow: none;
+}
+
+.other-card {
+  padding-bottom: 140px !important;
+  box-sizing: border-box;
+}
+
 /* 滚动条美化 */
 .markdown-view::-webkit-scrollbar,
 .right-panel::-webkit-scrollbar {
@@ -962,18 +1023,18 @@ h3 {
 
 .markdown-view::-webkit-scrollbar-track,
 .right-panel::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #1a1a1a;
 }
 
 .markdown-view::-webkit-scrollbar-thumb,
 .right-panel::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #555;
   border-radius: 3px;
 }
 
 .markdown-view::-webkit-scrollbar-thumb:hover,
 .right-panel::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #777;
 }
 
 .markdown-view::-webkit-scrollbar-button,
@@ -994,6 +1055,7 @@ h3 {
   }
 }
 
+/* 移动端响应式设计 */
 @media (max-width: 768px) {
   .article-view {
     height: auto;
@@ -1015,16 +1077,16 @@ h3 {
   }
 
   .right-panel {
-    height: auto;
-    order: -1; /* 将右侧面板移到顶部 */
+    display: none;
   }
 
   .resizer {
-    display: none; /* 移动端隐藏分隔线 */
+    display: none;
   }
 
   .content-wrapper {
     padding: 20px 15px;
+    max-width: 100%;
   }
 
   .main-title {
@@ -1035,6 +1097,7 @@ h3 {
   .intro-text {
     font-size: 1rem;
     margin-bottom: 20px;
+    display: none;
   }
 
   .divider {
@@ -1049,6 +1112,19 @@ h3 {
   h3 {
     font-size: 1.2rem;
     margin: 18px 0 10px;
+  }
+
+  .mobile-cover-section {
+    margin-bottom: 15px;
+  }
+
+  .mobile-abstract-section {
+    margin-bottom: 20px;
+  }
+
+  .mobile-comment-section {
+    margin-top: 30px;
+    padding-top: 20px;
   }
 
   .info-container {
@@ -1093,10 +1169,6 @@ h3 {
 }
 
 @media (max-width: 480px) {
-  .article-view {
-    height: auto;
-  }
-
   .content-wrapper {
     padding: 15px 10px;
   }
@@ -1135,6 +1207,14 @@ h3 {
     margin: 20px 0;
   }
 
+  .mobile-cover-section .cover-card {
+    min-height: 150px;
+  }
+
+  .mobile-abstract-section .abstract-card {
+    padding: 15px;
+  }
+
   .info-container {
     padding: 15px 10px;
     gap: 12px;
@@ -1164,7 +1244,7 @@ h3 {
   .other-card {
     padding: 8px 5px;
     width: 100%;
-    height: 1000px;
+    height: auto;
   }
 
   .other-text {
@@ -1189,7 +1269,7 @@ h3 {
 
 .article-content {
   line-height: 1.8;
-  color: #333842;
+  color: #e0e0e0;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -1211,7 +1291,7 @@ h3 {
 }
 
 .article-content pre {
-  background-color: #f8fafc;
+  background-color: #2d2d2d;
   border-radius: 6px;
   padding: 16px;
   overflow-x: auto;
@@ -1287,5 +1367,4 @@ h3 {
 .status-dot.disabled {
   background-color: #f5222d;
 }
-
 </style>

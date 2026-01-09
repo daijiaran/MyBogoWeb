@@ -192,7 +192,7 @@ onUnmounted(() => {
 
 /* 原有样式保持不变 */
 .no-replies {
-  color: #ffffff;
+  color: #181818;
   font-size: 14px;
   padding: 8px 0;
 }

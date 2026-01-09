@@ -1,5 +1,5 @@
 {
-  "name": "vue_project_2",
+  "name": "DigitalLog",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,6 +12,7 @@
     "axios": "^1.12.2",
     "core-js": "^3.8.3",
     "element-plus": "^2.11.4",
+    "gsap": "^3.13.0",
     "highlight.js": "^11.11.1",
     "marked": "^4.0.18",
     "pinia": "^3.0.3",
@@ -51,9 +52,14 @@
     },
     "overrides": [
       {
-        "files": ["*.ts", "*.tsx"],
+        "files": [
+          "*.ts",
+          "*.tsx"
+        ],
         "parser": "@typescript-eslint/parser",
-        "plugins": ["@typescript-eslint"],
+        "plugins": [
+          "@typescript-eslint"
+        ],
         "extends": [
           "plugin:@typescript-eslint/recommended"
         ],
@@ -63,7 +69,9 @@
         }
       },
       {
-        "files": ["*.vue"],
+        "files": [
+          "*.vue"
+        ],
         "parser": "vue-eslint-parser",
         "parserOptions": {
           "parser": "@typescript-eslint/parser",

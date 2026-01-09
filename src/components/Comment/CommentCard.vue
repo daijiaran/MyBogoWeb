@@ -318,7 +318,7 @@ const handleSubmitComment = async () => {
 .reply-btn {
   background: none;
   border: none;
-  color: #007bff;
+  color: #4fc3f7;
   cursor: pointer;
   padding: 4px 12px;
   font-size: 14px;
@@ -332,7 +332,7 @@ const handleSubmitComment = async () => {
 .reply-button {
   background: none;
   border: none;
-  color: #4c4c4c;
+  color: #999;
   cursor: pointer;
   padding: 4px 12px;
   font-size: 14px;
@@ -341,15 +341,15 @@ const handleSubmitComment = async () => {
 }
 
 .reply-button:hover {
-  color: #007bff;
+  color: #4fc3f7;
 }
 
 /* 评论输入栏主体 */
 .reply-input {
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(30, 30, 30, 0.8);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(100, 100, 100, 0.3);
   border-radius: 12px;
   flex-direction: column;
   gap: 10px;
@@ -373,12 +373,12 @@ const handleSubmitComment = async () => {
   min-height: 56px;
   max-height: 150px;
   padding: 12px 14px;
-  border: 1px solid rgba(203, 213, 225, 0.6);
+  border: 1px solid rgba(100, 100, 100, 0.5);
   border-radius: 8px;
   font-size: 14px;
   line-height: 1.6;
-  color: #1e293b;
-  background-color: rgba(248, 250, 252, 0.7);
+  color: #e0e0e0;
+  background-color: rgba(45, 45, 45, 0.8);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   resize: none;
@@ -390,13 +390,13 @@ const handleSubmitComment = async () => {
 
 .comment-textarea:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-  background-color: rgba(255, 255, 255, 0.9);
+  border-color: #4fc3f7;
+  box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+  background-color: rgba(45, 45, 45, 0.95);
 }
 
 .comment-textarea::placeholder {
-  color: #94a3b8;
+  color: #888;
   font-size: 13px;
 }
 
@@ -411,12 +411,12 @@ const handleSubmitComment = async () => {
 }
 
 .char-count {
-  color: #94a3b8;
+  color: #999;
   font-weight: 500;
 }
 
 .shortcut-tip {
-  color: #64748b;
+  color: #888;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -427,7 +427,7 @@ const handleSubmitComment = async () => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background-color: #94a3b8;
+  background-color: #999;
 }
 
 /* 发送按钮 */
@@ -458,8 +458,8 @@ const handleSubmitComment = async () => {
 }
 
 .submit-btn:disabled {
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: #2d2d2d;
+  color: #666;
   cursor: not-allowed;
   opacity: 0.9;
   box-shadow: none;
@@ -529,10 +529,11 @@ const handleSubmitComment = async () => {
 
 /* 基础样式 */
 .comment-card {
-  border: 1px solid #ededed;
+  border: 1px solid #555;
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
+  background-color: #1e1e1e;
   transition: all 0.3s ease; /* 确保支持过渡动画 */
 }
 
@@ -583,17 +584,19 @@ const handleSubmitComment = async () => {
   text-align: left;
   font-weight: bold;
   margin-bottom: 4px;
+  color: #e0e0e0;
 }
 
 .date {
   font-size: 12px;
-  color: #666;
+  color: #999;
 }
 
 .comment-content {
   text-align: left;
   margin-bottom: 12px;
   line-height: 1.6;
+  color: #e0e0e0;
 }
 
 /* 新增加载状态样式 */
@@ -602,19 +605,19 @@ const handleSubmitComment = async () => {
   height: 40px;
   border-radius: 50%;
   margin-right: 12px;
-  background-color: #f0f0f0;
+  background-color: #2d2d2d;
   animation: loading 1.5s infinite;
 }
 
 @keyframes loading {
   0% {
-    background-color: #f0f0f0;
+    background-color: #2d2d2d;
   }
   50% {
-    background-color: #e0e0e0;
+    background-color: #3a3a3a;
   }
   100% {
-    background-color: #f0f0f0;
+    background-color: #2d2d2d;
   }
 }
 </style>

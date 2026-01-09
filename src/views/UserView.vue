@@ -1,109 +1,113 @@
 <template>
-  <div class="user-page">
-    <!-- 左侧边栏（桌面端） -->
-    <aside class="sidebar" :class="{ hidden: !sidebarVisible }">
-      <div class="sidebar-menu">
-        <button
-            class="menu-item"
-            :class="{ active: currentActive === 'home' }"
-            @click="currentActive = 'home'"
-        >
-          <span class="menu-icon">🏠</span>
-          <span class="menu-text">我的主页</span>
-        </button>
-        <button
-            class="menu-item"
-            :class="{ active: currentActive === 'personal' }"
-            @click="currentActive = 'personal'"
-        >
-          <span class="menu-icon">👤</span>
-          <span class="menu-text">个人资料</span>
-        </button>
-        <button
-            class="menu-item"
-            :class="{ active: currentActive === 'release' }"
-            @click="currentActive = 'release'"
-        >
-          <span class="menu-icon">📝</span>
-          <span class="menu-text">发布</span>
-        </button>
-        <button
-            class="menu-item"
-            :class="{ active: currentActive === 'notifications' }"
-            @click="currentActive = 'notifications'"
-        >
-          <span class="menu-icon">🔔</span>
-          <span class="menu-text">消息通知</span>
-        </button>
-      </div>
-    </aside>
 
-    <!-- 侧边栏隐藏时：左侧展开按钮（仅桌面端） -->
-    <button
-        class="toggle-sidebar-btn expand-btn"
-        @click="toggleSidebar"
-        v-show="!sidebarVisible && windowWidth > 768"
-    >
-      <span class="menu-icon">{{ buttonIcon }}</span>
-      <span class="menu-text">{{ buttonText }}</span>
-    </button>
+  <div class="Mian">
+    <div class="user-page">
+      <!-- 左侧边栏（桌面端） -->
+      <aside class="sidebar" :class="{ hidden: !sidebarVisible }">
+        <div class="sidebar-menu">
+          <button
+              class="menu-item"
+              :class="{ active: currentActive === 'home' }"
+              @click="currentActive = 'home'"
+          >
+            <span class="menu-icon"></span>
+            <span class="menu-text">主页</span>
+          </button>
+          <button
+              class="menu-item"
+              :class="{ active: currentActive === 'personal' }"
+              @click="currentActive = 'personal'"
+          >
+            <span class="menu-icon"></span>
+            <span class="menu-text">个人资料</span>
+          </button>
+          <button
+              class="menu-item"
+              :class="{ active: currentActive === 'release' }"
+              @click="currentActive = 'release'"
+          >
+            <span class="menu-icon"></span>
+            <span class="menu-text">发布</span>
+          </button>
+          <button
+              class="menu-item"
+              :class="{ active: currentActive === 'notifications' }"
+              @click="currentActive = 'notifications'"
+          >
+            <span class="menu-icon"></span>
+            <span class="menu-text">消息通知</span>
+          </button>
+        </div>
+      </aside>
 
-    <!-- 内容区域 -->
-    <div class="main-content" :class="{ 'full-width': !sidebarVisible }">
-      <!-- 我的主页区域（默认激活） -->
-      <div v-if="currentActive === 'home'">
-        <!-- 顶部用户信息区 -->
-        <header class="user-header">
-          <div class="avatar-wrapper">
-            <img
-                :src="userAvatar"
-                alt="用户头像"
-                class="user-avatar"
-                :class="{ 'default-avatar': !userStore.avatarUrl }"
-            >
-            <!-- 默认头像占位图标 -->
-            <span class="default-avatar-icon" v-if="!userStore.avatarUrl">👤</span>
-          </div>
-          <div class="user-info">
-            <h1 class="user-name">{{ userName }}</h1>
-            <p class="user-id">ID: {{ userId }}</p>
-            <p class="user-status" v-if="loading">加载用户信息中...</p>
-            <p class="error-message" v-if="error">{{ error }}</p>
-          </div>
-        </header>
+      <!-- 侧边栏隐藏时：左侧展开按钮（仅桌面端） -->
+      <button
+          class="toggle-sidebar-btn expand-btn"
+          @click="toggleSidebar"
+          v-show="!sidebarVisible && windowWidth > 768"
+      >
+        <span class="menu-icon">{{ buttonIcon }}</span>
+        <span class="menu-text">{{ buttonText }}</span>
+      </button>
 
-        <!-- 已发布内容区 -->
-        <main class="content-section">
-          <load-articles-with-card2-in-user></load-articles-with-card2-in-user>
-        </main>
-      </div>
+      <!-- 内容区域 -->
+      <div class="main-content" :class="{ 'full-width': !sidebarVisible }">
+        <!-- 我的主页区域（默认激活） -->
+        <div class="home-css" v-if="currentActive === 'home'">
+          <!-- 顶部用户信息区 -->
+          <header class="user-header">
+            <div class="avatar-wrapper">
+              <img
+                  :src="userAvatar"
+                  alt="用户头像"
+                  class="user-avatar"
+                  :class="{ 'default-avatar': !userStore.avatarUrl }"
+              >
+              <!-- 默认头像占位图标 -->
+              <span class="default-avatar-icon" v-if="!userStore.avatarUrl">👤</span>
+            </div>
+            <div class="user-info">
+              <h1 class="user-name">{{ userName }}</h1>
+              <p class="user-id">ID: {{ userId }}</p>
+              <p class="user-status" v-if="loading">加载用户信息中...</p>
+              <p class="error-message" v-if="error">{{ error }}</p>
+            </div>
+          </header>
 
-      <!-- 个人资料区域 -->
-      <div v-if="currentActive === 'personal'" class="Personal-Profile content-section">
-        <UserEditor></UserEditor>
-      </div>
+          <!-- 已发布内容区 -->
+          <main class="content-section">
+            <load-articles-with-card2-in-user></load-articles-with-card2-in-user>
+          </main>
+        </div>
 
-      <!-- 发布区域 -->
-      <div v-if="currentActive === 'release'">
-        <release-manager class="release-manager"></release-manager>
-      </div>
+        <!-- 个人资料区域 -->
+        <div v-if="currentActive === 'personal'" class="Personal-Profile content-section">
+          <UserEditor></UserEditor>
+        </div>
 
-      <!-- 消息通知区域 -->
-      <div v-if="currentActive === 'notifications'" class="Notifications-Profile content-section">
-        <h2 class="section-title">消息通知</h2>
-        <div class="notifications-list">
-          <div class="notification-item" style="padding: 15px; border-bottom: 1px solid #f1f1f1;">
-            <p>系统通知：您的内容已通过审核</p>
-            <span style="font-size: 0.8rem; color: #636e72;">10分钟前</span>
-          </div>
-          <div class="notification-item" style="padding: 15px; border-bottom: 1px solid #f1f1f1;">
-            <p>用户@测试 点赞了您的内容</p>
-            <span style="font-size: 0.8rem; color: #636e72;">1小时前</span>
+        <!-- 发布区域 -->
+        <div v-if="currentActive === 'release'">
+          <release-manager class="release-manager"></release-manager>
+        </div>
+
+        <!-- 消息通知区域 -->
+        <div v-if="currentActive === 'notifications'" class="Notifications-Profile content-section">
+          <h2 class="section-title">消息通知</h2>
+          <div class="notifications-list">
+            <div class="notification-item" style="padding: 15px; border-bottom: 1px solid #555;">
+              <p>系统通知：您的内容已通过审核</p>
+              <span style="font-size: 0.8rem; color: #999;">10分钟前</span>
+            </div>
+            <div class="notification-item" style="padding: 15px; border-bottom: 1px solid #555;">
+              <p>用户@测试 点赞了您的内容</p>
+              <span style="font-size: 0.8rem; color: #999;">1小时前</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
 </template>
 
 <script setup>
@@ -112,9 +116,9 @@ import { useRouter } from 'vue-router';
 import { useUserStore } from '@/api/user';
 import { ElMessage } from 'element-plus';
 import userApi from "../api/user";
-import ReleaseManager from "../components/ReleaseManager.vue";
-import LoadArticlesWithCard2InUser from "../components/LoadArticlesWithCardInUser.vue";
-import UserEditor from "../components/UserEditor.vue";
+import ReleaseManager from "../components/User/ReleaseManager.vue";
+import LoadArticlesWithCard2InUser from "@/components/Article/LoadArticlesWithCardInUser.vue";
+import UserEditor from "../components/User/UserEditor.vue";
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -202,15 +206,29 @@ onUnmounted(() => {
   touch-action: manipulation;
 }
 
+.home-css {
+  display: flex; /* 关键：启用弹性布局 */
+  flex-direction: column; /* 关键：子元素垂直排列（默认是水平row） */
+  gap: 10px; /* 现在生效：控制垂直方向子元素的间距 */
+  /* 可选：添加宽度/高度，确保布局完整（根据你的页面需求调整） */
+  width: 100%;
+  /* 若需要垂直填满父容器，可加：height: 100%; */
+}
+
+.Mian{
+  padding-top: 60px;
+}
+
 /* 整体布局 */
 .user-page {
-  padding: 20px 20px 40px;
+  max-height: calc(100vh - 60PX);
+  padding: 20px 20px 20px;
   font-family: 'Segoe UI', Roboto, Oxygen, sans-serif;
-  color: #333;
+  color: #e0e0e0;
   display: flex;
   gap: 20px;
-  background: #ffffff;
-  min-height: 80vh;
+  background: #000000;
+  height: 100%;
   position: relative;
   width: 100%;
   box-sizing: border-box;
@@ -239,9 +257,9 @@ onUnmounted(() => {
   align-items: center;
   gap: 30px;
   padding: 30px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
   word-wrap: break-word;
   width: 100%;
   box-sizing: border-box;
@@ -287,28 +305,28 @@ onUnmounted(() => {
 .user-name {
   margin: 0 0 10px;
   font-size: 2.2rem;
-  color: #2d3436;
+  color: #e0e0e0;
   font-weight: 700;
 }
 
 .user-id {
   margin: 0 0 15px;
   font-size: 1rem;
-  color: #636e72;
+  color: #999;
   padding: 5px 10px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(45, 45, 45, 0.6);
   border-radius: 4px;
   display: inline-block;
 }
 
 .user-status {
-  color: #636e72;
+  color: #999;
   font-style: italic;
 }
 
 .error-message {
-  color: #d63031;
-  background: rgba(255, 106, 106, 0.1);
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.2);
   padding: 8px 12px;
   border-radius: 4px;
   display: inline-block;
@@ -316,11 +334,11 @@ onUnmounted(() => {
 
 /* 内容区样式 */
 .content-section {
-  background: white;
+  background: #1e1e1e;
   border-radius: 12px;
   padding: 30px;
   min-height: 800px;
-  box-shadow: 0 2px 10px rgba(230, 228, 228, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -330,23 +348,43 @@ onUnmounted(() => {
 .section-title {
   margin: 0 0 25px;
   font-size: 1.5rem;
-  color: #2d3436;
+  color: #434343;
   font-weight: 600;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f1f1f1;
+  border-bottom: 1px solid #555;
 }
 
 /* 个人资料、发布、消息通知区域通用样式 */
 .profile-content, .release-content, .notifications-list {
   line-height: 1.8;
-  color: #4a4a4a;
+  color: #3a3a3a;
 }
 
 .Personal-Profile {
-  min-height: 300px;
+  color: #e0e0e0;
+  min-height: 100%; /* 改为百分比填充 */
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background-color: #1e1e1e;
+  width: 100%;
+  padding: 20px; /* 恢复合理的内边距 */
+  box-sizing: border-box; /* 确保padding包含在宽度内 */
+}
+
+/* 或者更精确的修复 */
+.Personal-Profile {
+  color: #e0e0e0;
+  min-height: 100vh; /* 使用视口高度 */
+  background-color: #1e1e1e;
+  width: 100%;
+  padding: 0; /* 保持0，但确保子元素正确处理 */
+}
+
+.Personal-Profile .profile-edit-container {
+  padding: 20px; /* 为编辑页面容器单独设置内边距 */
+  min-height: 100vh;
+  background-color: #1e1e1e;
 }
 
 .notification-item:last-child {
@@ -361,10 +399,10 @@ onUnmounted(() => {
   position: sticky;
   top: 20px;
   height: fit-content;
-  background: #dddddd;
+  background: #000000;
   border-radius: 12px;
   padding: 20px 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 10px rgba(154, 154, 154, 0.5);
   transition: all 0.3s ease; /* 平滑过渡 */
   overflow: hidden; /* 隐藏超出部分 */
 }
@@ -386,10 +424,10 @@ onUnmounted(() => {
 .menu-item {
   width: 100%;
   padding: 15px 18px;
-  border: 1.5px solid #e0e0e0;
+  border: 1.5px solid #555;
   border-radius: 10px;
-  background: white;
-  color: #333;
+  background: #1e1e1e;
+  color: #e0e0e0;
   font-size: 1rem;
   font-weight: 500;
   text-align: left;
@@ -406,20 +444,20 @@ onUnmounted(() => {
 }
 
 .menu-item:not(.active):hover {
-  background: #f5f5f5;
-  border-color: #b0b0b0;
+  background: #2d2d2d;
+  border-color: #777;
 }
 
 .menu-item.active {
-  background: #e3f2fd !important;
-  color: #1976d2;
-  border-color: #90caf9;
-  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.2);
+  background: rgba(79, 195, 247, 0.2) !important;
+  color: #4fc3f7;
+  border-color: #4fc3f7;
+  box-shadow: 0 2px 6px rgba(79, 195, 247, 0.3);
 }
 
 .menu-item.active:hover {
-  background: #bbdefb !important;
-  border-color: #64b5f6;
+  background: rgba(79, 195, 247, 0.3) !important;
+  border-color: #4fc3f7;
 }
 
 /* 折叠按钮样式（侧边栏显示时，在侧边栏底部） */
@@ -428,9 +466,10 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   margin-top: 20px;
-  background-color: #f8f9fa !important;
-  border-color: #dee2e6 !important;
+  background-color: #2d2d2d !important;
+  border-color: #555 !important;
   margin-bottom: 10px;
+  color: #e0e0e0;
 }
 
 .toggle-sidebar-btn .menu-icon {
@@ -438,8 +477,8 @@ onUnmounted(() => {
 }
 
 .toggle-sidebar-btn:hover {
-  background-color: #e9ecef !important;
-  border-color: #ced4da !important;
+  background-color: #3a3a3a !important;
+  border-color: #777 !important;
 }
 
 /* 展开按钮样式（侧边栏隐藏时，固定在左侧中间） */
@@ -448,17 +487,17 @@ onUnmounted(() => {
   left: -15px;
   top: 90%;
   transform: translateY(-50%);
-  background-color: white;
-  border: 1px solid #e0e0e0;
+  background-color: #1e1e1e;
+  border: 1px solid #555;
   border-left: none;
   border-radius: 0 16px 16px 0;
   padding: 18px 20px;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
   z-index: 999;
   transition: all 0.3s ease;
-  color: #666;
+  color: #999;
   width: auto;
   margin: 0;
   display: flex;
@@ -479,9 +518,9 @@ onUnmounted(() => {
 }
 
 .toggle-sidebar-btn.expand-btn:hover {
-  background-color: #f5f5f5;
+  background-color: #2d2d2d;
   padding: 18px 14px;
-  color: #1976d2;
+  color: #4fc3f7;
 }
 
 /* 平板端响应式调整 (769px - 1024px) */
@@ -518,7 +557,7 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 15px 15px 0;
     gap: 20px;
-    background-color: #f9fafb;
+    background-color: #1a1a1a;
     min-height: 100vh;
     overflow-x: hidden;
   }
@@ -531,13 +570,13 @@ onUnmounted(() => {
     width: 100vw;
     max-width: 100%;
     margin-top: 92vh;
-    background: #ffffff;
+    background: #1e1e1e;
     border-radius: 20px 20px 0 0;
     padding: 10px 15px;
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
     z-index: 999;
-    box-shadow: 0 -3px 20px rgba(0, 0, 0, 0.06);
-    border-top: 1px solid #f0f0f0;
+    box-shadow: 0 -3px 20px rgba(0, 0, 0, 0.5);
+    border-top: 1px solid #555;
     box-sizing: border-box;
     height: auto;
   }
@@ -560,7 +599,7 @@ onUnmounted(() => {
     border: none;
     background: transparent;
     border-radius: 10px;
-    color: #6b7280;
+    color: #999;
     min-height: 50px;
   }
 
@@ -570,8 +609,8 @@ onUnmounted(() => {
   }
 
   .menu-item.active {
-    color: #3b82f6;
-    background-color: rgba(59, 130, 246, 0.1);
+    color: #4fc3f7;
+    background-color: rgba(79, 195, 247, 0.2);
   }
 
   .menu-icon {
@@ -590,6 +629,7 @@ onUnmounted(() => {
     text-align: center;
     padding: 20px 15px;
     gap: 15px;
+    width: 100%;
   }
 
   .user-avatar {
@@ -599,13 +639,14 @@ onUnmounted(() => {
 
   .user-name {
     font-size: 1.5rem;
-    color: #1e293b;
+    color: #e0e0e0;
     font-weight: 700;
   }
 
   .content-section {
     padding: 15px 15px 20px 15px;
     min-height: auto;
+    width: 100%;
   }
 
   .Personal-Profile {
@@ -676,12 +717,12 @@ onUnmounted(() => {
 }
 
 .release-content{
-  background: white;
+  background: #1e1e1e;
   border-radius: 12px;
   padding: 30px;
   min-height: 800px;
   max-height: 90vh;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -689,11 +730,11 @@ onUnmounted(() => {
 }
 
 .release-manager {
-  background: white;
+  background: #1e1e1e;
   border-radius: 12px;
   min-height: 800px;
   max-height: 89vh;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;

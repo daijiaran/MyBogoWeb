@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import MarkdownEditor from '@/components/Article/MarkdownEditor.vue'
 import axios from 'axios'
 
 export default {
@@ -89,7 +89,7 @@ export default {
 <style scoped>
 .editor-container {
   padding: 20px;
-  background: #fff;
+  background: #1e1e1e;
   flex: 1;
   overflow-y: auto;
 }
@@ -102,10 +102,11 @@ export default {
 .upload-placeholder {
   width: 200px;
   height: 120px;
-  border: 1px dashed #ddd;
+  border: 1px dashed #555;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #999;
+  background-color: #2d2d2d;
 }
 </style>

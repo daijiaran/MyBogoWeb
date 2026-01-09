@@ -1,5 +1,5 @@
 <<<<<<< HEAD
-# vue_project_2
+# DigitalLog
 
 ## Project setup
 ```

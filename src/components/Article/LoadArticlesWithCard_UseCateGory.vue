@@ -23,11 +23,21 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import CardArticle from './CardArticle.vue'
+import { getApiBaseUrl } from '../../utils/apiConfig'
 
-axios.defaults.baseURL = 'http://localhost:8080'
+// 接收父组件传入的categoryId
+// eslint-disable-next-line no-undef
+const props = defineProps({
+  categoryId: {
+    type: Number,
+    default: 2
+  }
+})
+
+axios.defaults.baseURL = getApiBaseUrl()
 axios.defaults.withCredentials = true
 
 const articleIds = ref([])
@@ -42,7 +52,8 @@ const fetchArticleList = async () => {
   loading.value = true
   error.value = ''
   try {
-    const res = await axios.get('/api/articles/list')
+    // 修复：使用反引号（`）而不是单引号（'）
+    const res = await axios.get(`/api/articles/list/category/${props.categoryId}`)
     if (res.data?.code === 200 && Array.isArray(res.data.data)) {
       articleIds.value = res.data.data.map(item => item.id)
     } else {
@@ -55,15 +66,24 @@ const fetchArticleList = async () => {
   }
 }
 
+// 监听categoryId变化，当父组件传入新的categoryId时重新获取数据
+watch(() => props.categoryId, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    fetchArticleList()
+  }
+})
+
 onMounted(fetchArticleList)
 </script>
 
 <style scoped>
 .articles-container {
   display: flex;
+
   flex-direction: column;
   align-items: center;
-  padding: 24px 16px;
+  padding: 24px 76px;
+
   width: 100%;
   box-sizing: border-box;
 }
@@ -87,6 +107,7 @@ onMounted(fetchArticleList)
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .error-state button:hover {
   background: #d33;
   color: #fff;
@@ -126,11 +147,13 @@ onMounted(fetchArticleList)
   .articles-container {
     padding: 16px 8px;
   }
+
   .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 12px;
     padding: 8px 0;
   }
+
   .loading-state,
   .error-state {
     padding: 40px 15px;

@@ -25,7 +25,8 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 
 // axios 配置
-axios.defaults.baseURL = 'http://localhost:8080'
+import { getApiBaseUrl } from './utils/apiConfig'
+axios.defaults.baseURL = getApiBaseUrl()
 axios.interceptors.request.use(config => {
     const token = localStorage.getItem('token')
     if (token) {

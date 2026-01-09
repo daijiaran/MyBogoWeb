@@ -145,13 +145,13 @@ onUnmounted(() => {
   margin: 0 0 20px 0;
   font-size: 20px;
   font-weight: bold;
-  color: #333;
+  color: #e0e0e0;
 }
 
 .loading, .no-comments {
   text-align: center;
   padding: 40px 20px;
-  color: #ffffff;
+  color: #999;
   font-size: 14px;
 }
 

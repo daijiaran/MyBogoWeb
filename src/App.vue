@@ -1,5 +1,5 @@
 <script setup>
-import Navigationbar from "@/components/Navigationbar.vue";
+import Navigationbar from "@/components/Nav/Navigationbar.vue";
 // import UserView from "./views/UserView.vue";
 </script>
 
@@ -17,7 +17,7 @@ import Navigationbar from "@/components/Navigationbar.vue";
 
 <style>
 .app-wrapper {
-  background-color: rgb(255, 255, 255);
+  background-color: rgba(2, 2, 2, 0.95);
   width: 100%;
   min-height: 100vh; /* 占满整个视口高度 */
   position: fixed; /* 固定在视口，不随滚动移动 */
@@ -50,10 +50,8 @@ import Navigationbar from "@/components/Navigationbar.vue";
   /* 最大高度限制为「视口高度 - 导航栏高度」，避免内容过长时撑满页面 */
   max-height: calc(100vh);
   /* 从导航栏下方开始显示 */
-  padding-top: 60px;
   /* 内容超出最大高度时，仅在该区域内部滚动 */
   overflow: auto;
-  transition: padding-top 0.3s ease-in-out; /* 可选：同步调整padding以填充空间 */
 }
 
 /* 美化滚动条（可选） */
@@ -64,10 +62,10 @@ import Navigationbar from "@/components/Navigationbar.vue";
   background: transparent;
 }
 .other::-webkit-scrollbar-thumb {
-  background: rgba(147, 147, 147, 0.61);
+  background: rgba(100, 100, 100, 0.5);
   border-radius: 3px;
 }
 .other::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(150, 150, 150, 0.7);
 }
 </style>

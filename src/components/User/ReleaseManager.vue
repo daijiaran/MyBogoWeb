@@ -2,29 +2,22 @@
   <div class="Main">
     <div class="manage-container">
       <div class="split-layout" ref="splitLayout">
-        <!-- 移动端返回按钮 -->
-        <div class="mobile-back-btn" @click="showList = true" v-if="isMobile && !showList">
-          <ElIcon>
-            <ArrowLeft />
-          </ElIcon>
-          <span>返回列表</span>
-        </div>
-
-        <!-- 左侧文章列表 -->
+        <!-- 右侧文章列表（移动后） -->
         <div
             class="sidebar"
             :class="{ 'mobile-hidden': isMobile && !showList }"
             :style="{
             width: sidebarWidth + 'px',
-            transform: isCollapsed ? `translateX(-${sidebarWidth}px)` : 'translateX(0)',
-            transition: 'transform 0.3s ease'
+            transform: isCollapsed ? `translateX(${sidebarWidth}px)` : 'translateX(0)',
+            transition: 'transform 0.3s ease',
+            right: 0
           }"
         >
 
           <div class="article-container">
             <!-- 上方：文章列表标题 + 数量 -->
             <div class="article-header">
-              <h3 class="list-title">文章列表</h3>
+              <h3 class="list-title" style="color: #e0e0e0">文章列表</h3>
               <span class="list-count">{{ articleList.length + "/" + totalArticles }} 篇文章</span>
             </div>
 
@@ -134,46 +127,18 @@
           </div>
 
         </div>
-        <!-- 分隔线 - 可拖动 -->
-        <div
-            class="divider"
-            @mousedown="startDrag"
-            :style="{
-            left: isCollapsed ? '0' : `${sidebarWidth}px`,
-            height: '100%',
-            display: isMobile ? 'none' : 'block'
-          }"
-        ></div>
 
-        <!-- 折叠/展开按钮 -->
-        <div
-            class="toggle-btn"
-            @click="toggleSidebar"
-            :style="{
-            left: isCollapsed ? '6px' : `${sidebarWidth}px`,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            display: isMobile ? 'none' : 'block'
-          }"
-        >
-          <ElIcon v-if="isCollapsed">
-            <ArrowRight />
-          </ElIcon>
-          <ElIcon v-else>
-            <ArrowLeft />
-          </ElIcon>
-        </div>
-
-        <!-- 右侧编辑区：替换为 ReleaseComponent -->
+        <!-- 左侧编辑区：替换为 ReleaseComponent -->
         <div
             class="editor-area"
             :class="{ 'mobile-hidden': isMobile && showList }"
             :style="{
-            left: isCollapsed ? '6px' : `${sidebarWidth + 6}px`
+            right: isCollapsed ? '6px' : `${sidebarWidth + 6}px`,
+            left: 0
           }"
         >
           <div v-if="!currentEditingArticle && !isMobile" class="placeholder">
-            <p>请在左侧选择文章或新建一篇</p>
+            <p>请在右侧选择文章或新建一篇</p>
           </div>
 
           <!-- 引入自定义发布组件 -->
@@ -188,6 +153,55 @@
           />
         </div>
 
+        <!-- 分隔线 - 可拖动（调整位置） -->
+        <div
+            class="divider"
+            @mousedown="startDrag"
+            :style="{
+            right: isCollapsed ? '0' : `${sidebarWidth}px`,
+            height: '100%',
+            display: isMobile ? 'none' : 'block'
+          }"
+        ></div>
+
+        <!-- 折叠/展开按钮（调整位置和图标） -->
+        <div
+            class="toggle-btn"
+            @click="toggleSidebar"
+            :style="{
+            right: isCollapsed ? '6px' : `${sidebarWidth}px`,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: isMobile ? 'none' : 'block'
+          }"
+        >
+          <ElIcon v-if="isCollapsed">
+            <ArrowLeft />
+          </ElIcon>
+          <ElIcon v-else>
+            <ArrowRight />
+          </ElIcon>
+        </div>
+
+        <!-- 移动端返回按钮（调整文字） -->
+        <div class="mobile-back-btn" @click="showList = true" v-if="isMobile && !showList">
+          <ElIcon>
+            <ArrowLeft />
+          </ElIcon>
+          <span>返回列表</span>
+        </div>
+
+        <!--右上角固定保存按钮-->
+        <div class="mobile-footer-actions" v-if="isMobile && !showList">
+          <el-button
+              type="primary"
+              @click="handleSaveClick"
+              class="footer-btn submit-btn"
+          >
+            保存
+          </el-button>
+        </div>
+
       </div>
     </div>
   </div>
@@ -197,13 +211,18 @@
 import axios from "axios";
 import _ from "lodash";
 // 引入重命名后的组件
-import ReleaseComponent from "@/components/ReleaseComponent.vue";
+import ReleaseComponent from "@/components/User/ReleaseComponent.vue";
 import { ArrowLeft, ArrowRight } from "@element-plus/icons-vue";
 // 引入用户API
-import userApi from "../api/user";
+import userApi from "../../api/user";
 
 export default {
   name: "ReleaseManager",
+  computed: {
+    ReleaseComponent() {
+      return ReleaseComponent
+    }
+  },
   components: {
     ReleaseComponent, // 注册重命名后的组件
     ArrowLeft,
@@ -244,6 +263,15 @@ export default {
   },
 
   methods: {
+
+    handleSaveClick() {
+      // 确保子组件已经挂载
+      if (this.$refs.releaseComponentRef && this.$refs.releaseComponentRef.submitForm) {
+        this.$refs.releaseComponentRef.submitForm();
+      } else {
+        console.error('ReleaseComponent 未挂载或 submitForm 方法不存在');
+      }
+    },
     // 获取当前用户信息
     async getCurrentUserInfo() {
       try {
@@ -309,7 +337,7 @@ export default {
       return title.length > max ? title.slice(0, max - 1) + "…" : title;
     },
 
-    // 拖动相关
+    // 拖动相关（修改拖动逻辑，适配右侧布局）
     initDragEvents() {
       document.addEventListener("mousemove", this.onDrag);
       document.addEventListener("mouseup", this.stopDrag);
@@ -332,7 +360,8 @@ export default {
       const container = document.querySelector(".split-layout");
       if (!container) return;
       const rect = container.getBoundingClientRect();
-      let w = e.clientX - rect.left;
+      // 计算右侧侧边栏宽度：容器总宽度 - 鼠标距离左侧的距离
+      let w = rect.right - e.clientX;
       w = Math.max(this.minSidebarWidth, Math.min(this.maxSidebarWidth, w));
       this.sidebarWidth = w;
     },
@@ -578,7 +607,7 @@ export default {
 .manage-container {
   width: 100%;
   height: 100vh;
-  background-color: #f5f7fa;
+  background-color: rgba(0, 0, 0, 0);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -590,20 +619,62 @@ export default {
   overflow: hidden;
   height: 100%;
   position: relative;
+  background: rgb(0, 0, 0);
 }
 
 .sidebar {
-  background: linear-gradient(to bottom, #ffffff, #e3e3e3);
+  background: linear-gradient(to bottom, rgba(30, 30, 30, 0), rgba(20, 20, 20, 0));
   display: flex;
   flex-direction: column;
   height: 95vh;
   overflow: hidden;
   transition: width 0.3ms ease;
-  border-right: 1px solid #eee;
+  border-left: 1px solid rgba(165, 165, 165, 0.44); /* 改为左边框 */
   padding-top: 25px;
-  position: relative;
+  position: absolute; /* 改为绝对定位 */
   overflow-y: auto;
   z-index: 10;
+  border-radius: 40px;
+}
+
+/* 侧边栏滚动条样式 */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: rgb(234, 234, 234);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgb(100, 100, 100);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0);
+}
+
+.article-container {
+  padding: 0 16px 16px;
+  color: #ffffff;
+}
+
+.article-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  background: black;
+  border-bottom: 1px solid rgba(220, 220, 220, 0);
+}
+
+.search-and-create {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
 }
 
 /* 移动端隐藏类 */
@@ -613,19 +684,19 @@ export default {
 
 /* 移动端返回按钮 */
 .mobile-back-btn {
-  position: absolute;
-  top: 10px;
+  position: fixed;
+  top: 85px;
   left: 10px;
   z-index: 100;
   display: flex;
   align-items: center;
   gap: 5px;
-  background: white;
+  background: #2d2d2d;
+  color: #e0e0e0;
   padding: 5px 10px;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   cursor: pointer;
-  display: none;
 }
 
 .search-box {
@@ -633,7 +704,7 @@ export default {
   align-items: center;
   gap: 20px;
   padding: 16px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #555;
 }
 
 .el-input {
@@ -654,18 +725,19 @@ export default {
 .list-title {
   font-size: 18px;
   font-weight: 600;
+  color: #ffffff;
 }
 
 .list-count {
   font-size: 14px;
-  color: #666;
+  color: #000000;
 }
 
 .search-box {
   margin-top: 0;
   padding: 10px;
-  background: #fff;
-  border-bottom: 1px solid #eee;
+  background: rgba(45, 45, 45, 0.6);
+  border-bottom: 1px solid rgba(100, 100, 100, 0.3);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -679,7 +751,25 @@ export default {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
-  background-color: #fafafa;
+  background-color: rgba(20, 20, 20, 0.3);
+}
+
+/* 文章列表滚动条样式 */
+.article-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.article-list::-webkit-scrollbar-track {
+  background: rgba(20, 20, 20, 0.5);
+}
+
+.article-list::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.5);
+  border-radius: 3px;
+}
+
+.article-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.7);
 }
 
 .list-header {
@@ -688,20 +778,20 @@ export default {
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(100, 100, 100, 0.3);
 }
 
 .list-title {
   margin: 0;
-  color: #1f2329;
+  color: #e0e0e0;
   font-size: 16px;
   font-weight: 600;
 }
 
 .list-count {
   font-size: 12px;
-  color: #86909c;
-  background-color: #f2f3f5;
+  color: #999;
+  background-color: rgba(45, 45, 45, 0.6);
   padding: 2px 8px;
   border-radius: 12px;
 }
@@ -715,13 +805,13 @@ export default {
 .article-card {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: rgba(45, 45, 45, 0.6);
   border-radius: 8px;
   padding: 12px;
   margin: 0;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -729,7 +819,7 @@ export default {
 .article-card::before {
   content: '';
   position: absolute;
-  left: 0;
+  right: 0; /* 改为右侧边框 */
   top: 0;
   height: 100%;
   width: 3px;
@@ -739,16 +829,17 @@ export default {
 
 .article-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  background: rgba(60, 60, 60, 0.8);
 }
 
 .article-card.active {
-  border-color: #409eff;
-  background-color: #f0f7ff;
+  border-color: #4fc3f7;
+  background-color: rgba(79, 195, 247, 0.15);
 }
 
 .article-card.active::before {
-  background-color: #409eff;
+  background-color: #4fc3f7;
 }
 
 .article-cover {
@@ -780,7 +871,7 @@ export default {
 .article-title {
   display: block;
   font-size: 14px;
-  color: #1d2129;
+  color: #e0e0e0;
   font-weight: 500;
   line-height: 1.4;
   margin-bottom: 4px;
@@ -791,7 +882,7 @@ export default {
 }
 
 .article-card:hover .article-title {
-  color: #409eff;
+  color: #4fc3f7;
 }
 
 .article-meta {
@@ -808,7 +899,7 @@ export default {
 
 .article-date {
   font-size: 12px;
-  color: #86909c;
+  color: #999;
   white-space: nowrap;
 }
 
@@ -851,8 +942,8 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 40px 0;
-  color: #86909c;
-  background-color: #fff;
+  color: #999;
+  background-color: rgba(45, 45, 45, 0.6);
   border-radius: 8px;
   margin-top: 20px;
 }
@@ -860,7 +951,7 @@ export default {
 .empty-icon {
   font-size: 48px;
   margin-bottom: 16px;
-  color: #c9cdd4;
+  color: #666;
 }
 
 .empty-text {
@@ -868,11 +959,12 @@ export default {
   font-size: 14px;
 }
 
+/* 分隔线调整到右侧 */
 .divider {
   width: 6px;
-  background: rgba(255, 255, 255, 0);
+  background: rgba(100, 100, 100, 0.3);
   cursor: col-resize;
-  transition: background 0s, left 0s ease;
+  transition: background 0s, right 0s ease;
   user-select: none;
   z-index: 20;
   position: absolute;
@@ -880,27 +972,31 @@ export default {
 }
 
 .divider:hover {
-  background: #e0e0e0;
+  background: rgba(150, 150, 150, 0.6);
 }
 
 .load-more {
   text-align: center;
   padding: 16px;
-  color: #666;
+  color: #999;
   font-size: 14px;
 }
 
+/* 编辑区调整到左侧 */
 .editor-area {
   position: absolute;
   top: 0;
-  right: 0;
+  left: 0;
   bottom: 0;
+  right: 326px; /* 默认宽度+分隔线宽度 */
   /* 从浅灰透明到深灰透明的垂直渐变，柔和不刺眼 */
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.35));
+  background: linear-gradient(to bottom, rgba(20, 20, 20, 0.8), rgba(15, 15, 15, 0.95));
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  transition: left 0s ease;
+  transition: right 0s ease;
+  border-radius: 40px;
+
 }
 
 .editor-area::-webkit-scrollbar {
@@ -913,9 +1009,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #86909c;
+  color: #999;
   font-size: 16px;
-  background-color: #fafafa;
+  background-color: rgba(30, 30, 30, 0.5);
 }
 
 /* 保留编辑器容器基础样式，具体编辑样式在 ReleaseComponent 中 */
@@ -923,33 +1019,52 @@ export default {
   position: absolute;
   width: 15px;
   height: 40px;
-  background-color: #fff;
-  border: 1px solid #000000;
+  background-color: rgba(45, 45, 45, 0.8);
+  border: 1px solid #555;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   z-index: 1000;
-  transition: left 0s ease;
+  transition: right 0s ease;
+  color: #e0e0e0;
 }
 
 .toggle-btn i {
   font-size: 18px;
-  color: #000000;
+  color: #e0e0e0;
 }
 
 .toggle-btn:hover {
-  background-color: #f5f5f5;
+  background-color: rgba(60, 60, 60, 0.9);
+  border-color: #4fc3f7;
 }
 
 .toggle-btn:hover i {
-  color: #ffffff;
+  color: #4fc3f7;
 }
 
 /* 移动端样式 */
 @media (max-width: 767px) {
+
+  .mobile-footer-actions {
+    position: fixed;
+    top: 85px;       /* 距离顶部15px */
+    right: 35px;     /* 距离右边15px */
+    z-index: 9999;   /* 确保悬浮在最上层 */
+    border-radius: 4px;
+    color: #ffffff;
+  }
+
+  /* 按钮内部样式可保持原样 */
+  .footer-btn.submit-btn {
+    background-color: #4fc3f7;
+    border-color: #4fc3f7;
+    color: #fff;
+  }
+
   .articles-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 15px;
@@ -999,10 +1114,13 @@ export default {
     width: 100% !important;
     height: 100vh !important;
     padding-top: 15px;
+    right: 0 !important;
+    border-left: none;
   }
 
   .editor-area {
     width: 100% !important;
+    right: 0 !important;
     left: 0 !important;
   }
 
@@ -1018,6 +1136,10 @@ export default {
 
   .create-btn {
     width: 100%;
+  }
+
+  .divider {
+    display: none !important;
   }
 }
 </style>

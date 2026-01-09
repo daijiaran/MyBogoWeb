@@ -442,7 +442,7 @@ const formatCommentContent = (content) => {
 
 /* 评论输入栏主体 */
 .reply-input {
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(40, 40, 40, 0.85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.4);
