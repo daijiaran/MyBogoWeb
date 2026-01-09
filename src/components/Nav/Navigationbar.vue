@@ -1,70 +1,72 @@
 <template>
-  <header class="navbar">
-    <!-- 添加返回按钮，仅在收缩状态显示 -->
-    <button 
-      class="back-btn" 
-      v-if="isCollapsed" 
-      @click="handleBack"
-    >
-      ← 返回
-    </button>
-    
-    <transition name="navbar-anim">
-      <div
-        class="nav"
-        :class="{ 'collapsed': isCollapsed }"
-        v-show="true"
+  <template v-if="!isQuizMode">
+    <header class="navbar">
+      <button
+          class="back-btn"
+          v-if="isCollapsed"
+          @click="handleBack"
       >
-      <!-- Logo（移动端隐藏） -->
-      <span class="title-logo" v-if="!isCollapsed">DigitalMaker</span>
+        ← 返回
+      </button>
 
-      <!-- 桌面端&移动端导航（移动端直接显示） -->
-      <nav class="desktop-nav" v-if="!isCollapsed">
-        <router-link
-            v-for="item in menuItems"
-            :key="item.id"
-            :to="item.path"
-            :style="{ 'margin': `0 ${itemGap}px` }"
-            class="nav-link"
+      <transition name="navbar-anim">
+        <div
+            class="nav"
+            :class="{ 'collapsed': isCollapsed }"
+            v-show="true"
         >
-          {{ item.title }}
-        </router-link>
-      </nav>
+          <span class="title-logo" v-if="!isCollapsed">DigitalMaker</span>
 
-      <!-- 移动端汉堡菜单（永久隐藏） -->
-      <div class="hamburger" @click.stop="toggleMenu" style="display: none;">
-        <div class="hamburger-icon" />
-      </div>
+          <nav class="desktop-nav" v-if="!isCollapsed">
+            <router-link
+                v-for="item in menuItems"
+                :key="item.id"
+                :to="item.path"
+                :style="{ 'margin': `0 ${itemGap}px` }"
+                class="nav-link"
+            >
+              {{ item.title }}
+            </router-link>
+          </nav>
 
-      <!-- 移动端折叠菜单（永久隐藏） -->
-      <transition name="slide-down" appear>
-        <nav v-show="isMenuOpen" class="mobile-nav" style="display: none;">
-          <router-link
-              v-for="item in menuItems"
-              :key="item.id"
-              :to="item.path"
-              class="mobile-link"
-              @click="closeMenu"
-          >
-            {{ item.title }}
-          </router-link>
-        </nav>
+          <div class="hamburger" @click.stop="toggleMenu" style="display: none;">
+            <div class="hamburger-icon" />
+          </div>
+
+          <transition name="slide-down" appear>
+            <nav v-show="isMenuOpen" class="mobile-nav" style="display: none;">
+              <router-link
+                  v-for="item in menuItems"
+                  :key="item.id"
+                  :to="item.path"
+                  class="mobile-link"
+                  @click="closeMenu"
+              >
+                {{ item.title }}
+              </router-link>
+            </nav>
+          </transition>
+        </div>
       </transition>
-      </div>
-    </transition>
-    <!-- 用户按钮（PC端右上角/移动端底部中间） -->
-  </header>
+    </header>
 
-  <div class="user-btn" @click.stop="handleAvatarClick" v-if="!isCollapsed">
-    <span v-if="!isLogin" class="login-text">登录</span>
-    <img
-        v-else
-        :src="userAvatar"
-        alt="用户头像"
-        class="avatar-img"
-    >
+    <div class="user-btn" @click.stop="handleAvatarClick" v-if="!isCollapsed">
+      <span v-if="!isLogin" class="login-text">登录</span>
+      <img
+          v-else
+          :src="userAvatar"
+          alt="用户头像"
+          class="avatar-img"
+      >
+    </div>
+  </template>
+
+  <div v-else class="quiz-home-btn-container">
+    <button class="quiz-home-btn" @click="goHome">
+      🏠 返回首页
+    </button>
   </div>
-  <!-- 用户弹窗 -->
+
   <transition name="fade-in" appear>
     <div v-if="isPopupOpen" class="popup-container">
       <div class="popup-mask" @click="closePopup"></div>
@@ -88,8 +90,6 @@ import { useUserStore } from "../../api/user";
 import { unref } from 'vue';
 import { useRouter } from 'vue-router';
 
-
-
 export default {
   name: 'NavigationBar',
   components: { LoginAndRegister },
@@ -97,11 +97,11 @@ export default {
   data() {
     return {
       menuItems: [
-        { id: 1, title: '首页', path: '/' },
-        { id: 2, title: 'Unity项目', path: '/UnityProject' },
-        { id: 3, title: '宣传视频', path: '/PromotionalVideoView' },
-        { id: 4, title: '日志', path: '/LogView' },
-        { id: 5, title: '刷题工具', path: '/quiz-app-container' },
+        {id: 1, title: '首页', path: '/'},
+        {id: 2, title: 'Unity项目', path: '/UnityProject'},
+        {id: 3, title: '宣传视频', path: '/PromotionalVideoView'},
+        {id: 4, title: '日志', path: '/LogView'},
+        {id: 5, title: '刷题工具', path: '/quiz-app-container'},
       ],
       isMenuOpen: false,
       isPopupOpen: false,
@@ -119,6 +119,10 @@ export default {
     userStore() {
       return useUserStore();
     },
+    // 修改点3：新增计算属性，判断是否为刷题页面
+    isQuizMode() {
+      return this.$route.path === '/quiz-app-container';
+    }
   },
   mounted() {
     // 监听自定义事件，用于从其他组件控制导航栏
@@ -163,7 +167,8 @@ export default {
     handleClickOutside(e) {
       if (!this.isMounted) return;
       const currentEl = unref(this.$el);
-      if (currentEl && !currentEl.contains(e.target)) {
+      // 注意：在刷题模式下，nav元素可能不存在，需要做非空判断
+      if (currentEl && !currentEl.contains(e.target) && !this.isQuizMode) {
         this.closeMenu();
         this.closePopup();
       }
@@ -188,6 +193,10 @@ export default {
         this.toggleNavbar(e.detail.collapsed);
       }
     },
+    // 修改点4：新增返回首页方法
+    goHome() {
+      this.$router.push('/');
+    }
   },
   setup() {
     return {
@@ -359,14 +368,29 @@ export default {
 }
 
 @keyframes mask-expand {
-  0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(0.5); opacity: 0.3; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(0.5);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes popup-scale {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .popup-mask.leave-active {
@@ -378,13 +402,25 @@ export default {
 }
 
 @keyframes mask-collapse {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(0); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
 }
 
 @keyframes popup-scale-reverse {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(0.8); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
 }
 
 /* 用户弹窗内容样式 */
@@ -428,9 +464,15 @@ export default {
 
 /* 动画效果 */
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(79, 195, 247, 0.6); }
-  70% { box-shadow: 0 0 0 8px rgba(79, 195, 247, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(79, 195, 247, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 195, 247, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(79, 195, 247, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 195, 247, 0);
+  }
 }
 
 /* Logo样式（PC端显示/移动端隐藏） */
@@ -605,5 +647,38 @@ export default {
   transform: translateX(-120px) scale(0.6);
   filter: blur(4px);
   opacity: 0;
+}
+
+/* 修改点5：新增刷题页返回按钮样式 */
+.quiz-home-btn-container {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000; /* 必须高于 quiz-app-container 的 100 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.quiz-home-btn {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 24px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.quiz-home-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.05);
+  border-color: #00ffd0;
+  color: #00ffd0;
 }
 </style>

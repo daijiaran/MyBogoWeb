@@ -5,7 +5,7 @@
         <h1>📋 试题解析工具 Pro</h1>
       </div>
 
-      <div v-if="currentQuizId" class="quiz-header-wrapper">
+      <div v-if="currentQuizId" class="quiz-header-wrapper" style="display: flex;">
         <div class="quiz-info-group">
           <span class="quiz-title" :title="currentQuiz.title">{{ currentQuiz.title }}</span>
           <span v-if="isViewingWrongOnly" class="tag mode-badge">错题模式</span>
@@ -51,6 +51,7 @@
               </span>
               <div class="quiz-item-title">{{ quiz.title }}</div>
               <span class="date">{{ formatDate(quiz.timestamp) }}</span>
+
               <div class="sidebar-actions">
                 <button class="action-btn" @click.stop="renameQuiz(quiz.id)" title="重命名">✏️</button>
                 <button class="action-btn delete" @click.stop="deleteQuiz(quiz.id)" title="删除">🗑️</button>
@@ -93,9 +94,9 @@
                 :key="q.id"
                 class="question-card"
                 :class="{
-                'status-correct': currentQuiz.isSubmitted && checkAnswer(q),
-                'status-wrong': currentQuiz.isSubmitted && !checkAnswer(q)
-              }"
+                  'status-correct': currentQuiz.isSubmitted && checkAnswer(q),
+                  'status-wrong': currentQuiz.isSubmitted && !checkAnswer(q)
+                }"
             >
               <div class="q-header">
                 <span>{{ q.meta || `题目 ${index + 1}` }}</span>
@@ -191,7 +192,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 
 // === 常量与状态 ===
 const STORAGE_KEY = 'quiz_tool_history_v2';
@@ -244,6 +245,8 @@ const currentTotal = computed(() => {
 onMounted(() => {
   loadHistory();
   applyThemeFromStorage();
+
+  // 自动加载逻辑：如果有历史，显示欢迎页；无历史显示导入页（由模板v-if控制）
 });
 
 watch(quizHistory, () => {
@@ -263,9 +266,7 @@ function loadHistory() {
 }
 
 function saveHistory() {
-  // 触发 watch
-  // 实际上由于 quizHistory 是 ref 且 deep watch，修改 userAnswer 会自动触发保存
-  // 这里手动保留函数是为了兼容性或显式调用
+  // Vue Reactivity handles this via watch, but specific triggers can use this hook if needed
 }
 
 // === 业务逻辑 ===
@@ -302,7 +303,7 @@ function deleteQuiz(id) {
 function submitQuiz() {
   if (currentQuiz.value) {
     currentQuiz.value.isSubmitted = true;
-    isViewingWrongOnly.value = false; // 提交后显示全卷结果
+    isViewingWrongOnly.value = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -413,7 +414,7 @@ function toggleTheme(event) {
   });
 }
 
-// === 解析核心逻辑 ===
+// === 解析核心逻辑 (复刻 HTML 文件中的逻辑) ===
 function parseAndGenerate() {
   const input = htmlInput.value;
   if (!input.trim()) return;
@@ -423,7 +424,7 @@ function parseAndGenerate() {
     const doc = parser.parseFromString(input, 'text/html');
     let questions = [];
 
-    // 尝试查找常规题目结构
+    // 1. 尝试常规格式
     let listItems = doc.querySelectorAll('.studentTestDetail-list');
     if (listItems.length === 0) {
       const plugins = doc.querySelectorAll('[class*="plugins-testType-"]');
@@ -437,6 +438,7 @@ function parseAndGenerate() {
     if (listItems.length > 0) {
       questions = parseStandardQuiz(listItems);
     } else {
+      // 2. 尝试 Angular/MOOC 格式
       const angularItems = doc.querySelectorAll('app-object-quiz-item');
       if (angularItems.length > 0) {
         questions = parseAngularQuiz(doc);
@@ -471,7 +473,7 @@ function fixHtmlContent(html) {
   return html.replace(/src="\/\//g, 'src="https://');
 }
 
-// 解析器: Angular/MOOC
+// 解析器: Angular/MOOC (与 HTML 文件保持一致)
 function parseAngularQuiz(doc) {
   const items = doc.querySelectorAll('app-object-quiz-item');
   const results = [];
@@ -531,11 +533,12 @@ function parseAngularQuiz(doc) {
       q.correctAnswer = ansText;
     }
 
-    // 补丁：如果没找到正确答案，尝试从用户正确结果推断
     if (!q.correctAnswer) {
-      // 这里需要注意，原逻辑是根据 .result-correct，但新试卷还没做
-      // 如果是已做过的试卷导入，可以尝试提取
-      // 这里简化处理
+      const resultCorrect = item.querySelector('.result-correct');
+      if (resultCorrect) {
+        // 仅作为 fallback
+        q.correctAnswer = q.userAnswer;
+      }
     }
 
     const knowledgeNode = item.querySelector('.knowledge-points .item-title');
@@ -617,33 +620,12 @@ function parseStandardQuiz(listItems) {
   });
   return results;
 }
-
 </script>
 
 <style scoped>
-:root {
-  /* 亮色模式变量 */
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --success: #10b981;
-  --danger: #ef4444;
-  --bg: #f3f4f6;
-  --card-bg: #ffffff;
-  --text: #1f2937;
-  --text-secondary: #6b7280;
-  --border: #e5e7eb;
-  --input-bg: #ffffff;
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --sidebar-width: 260px;
-  --header-height: 64px;
-}
-
-/* Vue scoped CSS 不直接支持 :root 变量定义在组件内影响全局。
-  但为了单文件组件的完整性，这里使用 ::v-deep 或直接写在组件根class上，
-  或者依赖外部CSS。鉴于这是迁移，我们直接使用数据属性选择器来模拟。
-*/
-
+/* 核心隔离：强制全屏，覆盖父级样式，并定义局部变量 */
 .quiz-app-container {
+  /* 变量定义 */
   --primary: #3b82f6;
   --primary-hover: #2563eb;
   --success: #10b981;
@@ -657,20 +639,32 @@ function parseStandardQuiz(listItems) {
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --sidebar-width: 260px;
   --header-height: 64px;
+
+  /* 滚动条变量 */
   --scrollbar-track: #f3f4f6;
   --scrollbar-thumb: #d1d5db;
   --scrollbar-thumb-hover: #9ca3af;
 
+  /* 布局与定位 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
   font-family: 'Segoe UI', system-ui, sans-serif;
   background-color: var(--bg);
   color: var(--text);
-  height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-/* 全局 Dark Mode 处理 - Vue 中通过 documentElement 属性匹配 */
+/* Dark Mode 适配 */
 :global([data-theme="dark"]) .quiz-app-container {
   --primary: #60a5fa;
   --primary-hover: #3b82f6;
@@ -683,16 +677,27 @@ function parseStandardQuiz(listItems) {
   --border: #374151;
   --input-bg: #374151;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+
   --scrollbar-track: #111827;
   --scrollbar-thumb: #4b5563;
   --scrollbar-thumb-hover: #6b7280;
 }
 
-/* 滚动条 */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+/* 滚动条样式 (作用于 .quiz-app-container 内部) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
 
 /* 头部 */
 header {
@@ -775,7 +780,7 @@ header {
 }
 .theme-toggle:hover { background-color: var(--bg); }
 
-/* 布局 */
+/* 主布局 */
 .app-layout {
   display: flex;
   flex: 1;
@@ -783,6 +788,7 @@ header {
   position: relative;
 }
 
+/* 侧边栏 */
 .sidebar {
   width: var(--sidebar-width);
   background-color: var(--card-bg);
@@ -790,7 +796,7 @@ header {
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, transform 0.3s ease;
   position: relative;
   z-index: 10;
 }
@@ -827,6 +833,7 @@ header {
   border: 1px solid transparent;
   font-size: 0.9em;
   position: relative;
+  transition: background 0.2s;
 }
 .sidebar-item:hover { background-color: var(--bg); }
 .sidebar-item.active { background-color: var(--bg); border-color: var(--primary); color: var(--primary); }
@@ -856,10 +863,12 @@ header {
   padding: 2px 4px;
   border-radius: 3px;
   color: var(--text-secondary);
+  transition: all 0.2s;
 }
 .action-btn:hover { background-color: var(--bg); color: var(--text); }
 .action-btn.delete:hover { color: var(--danger); }
 
+/* 侧边栏 Toggle 按钮 */
 .sidebar-toggle-btn {
   position: absolute;
   top: 50%;
@@ -875,12 +884,13 @@ header {
   cursor: pointer;
   z-index: 20;
   font-size: 12px;
+  transition: background 0.2s;
 }
 .sidebar-toggle-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
 .left-toggle { right: -20px; border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-left: none; }
 .right-toggle { left: -20px; border-top-left-radius: 8px; border-bottom-left-radius: 8px; border-right: none; }
 
-/* 主内容 */
+/* 主内容区 */
 .main-content {
   flex: 1;
   overflow-y: auto;
@@ -896,6 +906,7 @@ header {
   border-radius: 12px;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
+  margin-bottom: 30px;
 }
 .importer-desc { color: var(--text-secondary); font-size: 0.9em; }
 
@@ -916,7 +927,7 @@ textarea {
 .btn-group { display: flex; gap: 10px; }
 .parse-error { color: var(--danger); margin-top: 10px; }
 
-/* 按钮 */
+/* 按钮通用 */
 .btn {
   background-color: var(--primary);
   color: white;
@@ -927,9 +938,11 @@ textarea {
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
+  transition: all 0.2s;
 }
 .btn:hover { background-color: var(--primary-hover); }
 .btn.secondary { background-color: var(--text-secondary); }
+.btn.secondary:hover { opacity: 0.9; }
 .btn.sm { padding: 2px 8px; font-size: 12px; }
 
 /* 题目卡片 */
@@ -958,6 +971,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 .option-label:hover { background-color: var(--bg); }
 .option-label input { margin-top: 5px; margin-right: 12px; }
