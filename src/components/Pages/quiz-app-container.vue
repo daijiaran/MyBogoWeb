@@ -191,7 +191,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, watch, } from 'vue';
 
 // === 常量与状态 ===
 const STORAGE_KEY = 'quiz_tool_history_v2';

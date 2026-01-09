@@ -7,6 +7,7 @@ import Manage from '../views/ManageView.vue'
 import ArticleView from "@/views/ArticleView.vue";
 import UserView from "@/views/UserView.vue";
 import LogView from "@/views/LogView.vue";   // 管理页面组件
+import ExamTool from "@/components/Pages/quiz-app-container.vue"
 
 const routes = [
     {
@@ -39,6 +40,11 @@ const routes = [
         path: '/LogView',
         name: 'LogView',
         component: LogView
+    },
+    {
+        path: '/quiz-app-container',
+        name: 'ExamTool',
+        component: ExamTool
     },
     {
         path: '/user',

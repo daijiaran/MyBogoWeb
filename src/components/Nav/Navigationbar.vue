@@ -101,6 +101,7 @@ export default {
         { id: 2, title: 'Unity项目', path: '/UnityProject' },
         { id: 3, title: '宣传视频', path: '/PromotionalVideoView' },
         { id: 4, title: '日志', path: '/LogView' },
+        { id: 5, title: '刷题工具', path: '/quiz-app-container' },
       ],
       isMenuOpen: false,
       isPopupOpen: false,
