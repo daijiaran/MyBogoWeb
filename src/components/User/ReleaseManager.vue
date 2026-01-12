@@ -73,7 +73,7 @@
               >
                 <!-- 封面图 -->
                 <div v-if="item.coverUrl" class="article-cover">
-                  <img :src="item.coverUrl" :alt="item.title" class="cover-img">
+                  <img :src="$img(item.coverUrl)" :alt="item.title" class="cover-img">
                 </div>
 
                 <div class="article-info">

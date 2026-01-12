@@ -38,7 +38,7 @@
         >
           <img
               v-if="form.coverUrl"
-              :src="form.coverUrl"
+              :src="$img(form.coverUrl)"
               class="cover-preview"
               alt="封面图"
           />

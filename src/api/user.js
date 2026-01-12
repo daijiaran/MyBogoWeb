@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { defineStore } from 'pinia';
+import { getApiBaseUrl } from '../utils/apiConfig';
 
 /**
  * 清理Token中的非法字符
@@ -15,7 +16,7 @@ const cleanToken = (rawToken) => {
 
 // 创建 axios 实例
 const request = axios.create({
-    baseURL: '/api',
+    baseURL: getApiBaseUrl(),
     timeout: 60000
 });
 
@@ -36,21 +37,21 @@ request.interceptors.request.use(config => {
  * 用户API集合
  */
 const userApi = {
-    register: (data) => request.post('/users/register', data),
-    verifyCode: (data) => request.post('/users/verify-code', data),
-    login: (data) => request.post('/users/login', data),
-    logout: () => request.post('/users/logout'),
-    forgotPassword: (email) => request.post('/users/forgot-password', null, { params: { email } }),
-    resetPassword: (data) => request.post('/users/reset-password', data),
-    changePassword: (data) => request.put('/users/change-password', data),
-    getCurrentUser: () => request.get('/users/me'),
+    register: (data) => request.post('/api/users/register', data),
+    verifyCode: (data) => request.post('/api/users/verify-code', data),
+    login: (data) => request.post('/api/users/login', data),
+    logout: () => request.post('/api/users/logout'),
+    forgotPassword: (email) => request.post('/api/users/forgot-password', null, { params: { email } }),
+    resetPassword: (data) => request.post('/api/users/reset-password', data),
+    changePassword: (data) => request.put('/api/users/change-password', data),
+    getCurrentUser: () => request.get('/api/users/me'),
     /**
      * 通过用户ID获取用户信息
      * @param {string} userId - 用户ID (UUID字符串)
      * @returns {Promise} 返回用户信息响应
      */
-    getUserById: (userId) => request.get(`/users/${userId}`),
-    updateProfile: (data) => request.put('/users/profile', data)
+    getUserById: (userId) => request.get(`/api/users/${userId}`),
+    updateProfile: (data) => request.put('/api/users/profile', data)
 };
 
 /**

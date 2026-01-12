@@ -1,9 +1,10 @@
 // comment.js - 评论相关API调用封装
 import axios from 'axios';
+import { getApiBaseUrl } from '../utils/apiConfig';
 
 // 创建axios实例，配置基础URL和超时时间
 const commentApi = axios.create({
-    baseURL: '/api', // 基础URL，对应后端接口的根路径
+    baseURL: getApiBaseUrl(), // 基础URL，对应后端接口的根路径
     timeout: 5000, // 请求超时时间
     headers: {
         'Content-Type': 'application/json'
@@ -37,7 +38,7 @@ commentApi.interceptors.request.use(
  */
 export const createComment = async (commentData) => {
     try {
-        const response = await commentApi.post('/comments', commentData);
+        const response = await commentApi.post('/api/comments', commentData);
         return response.data;
     } catch (error) {
         console.error('提交评论失败:', error.response?.data || error.message);
@@ -54,7 +55,7 @@ export const createComment = async (commentData) => {
  */
 export const getArticleComments = async (articleId, page = 0, size = 10) => {
     try {
-        const response = await commentApi.get(`/comments/article/${articleId}`, {
+        const response = await commentApi.get(`/api/comments/article/${articleId}`, {
             params: { page, size }
         });
         return response.data;
@@ -71,7 +72,7 @@ export const getArticleComments = async (articleId, page = 0, size = 10) => {
  */
 export const getChildComments = async (parentId) => {
     try {
-        const response = await commentApi.get(`/comments/${parentId}/children`);
+        const response = await commentApi.get(`/api/comments/${parentId}/children`);
         return response.data;
     } catch (error) {
         console.error('获取子评论失败:', error.response?.data || error.message);

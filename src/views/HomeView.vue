@@ -227,12 +227,12 @@ export default {
         const tick = (now) => {
           const p = Math.min(1, (now - start) / duration);
           const v = Math.round(from + (to - from) * easeOut(p));
-          el.innerText = v + (to >= 100 ? (to === 500 ? "+" : "%") : "");
+          el.innerText = v + (to >= 100 ? (to === 120 ? "+" : "%") : "");
           if (p < 1) requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
       };
-      run(this.$refs.num1, 0, 500, 1200);
+      run(this.$refs.num1, 0, 120, 1200);
       run(this.$refs.num2, 0, 99, 1200);
       run(this.$refs.num3, 0, 100, 1200);
     },

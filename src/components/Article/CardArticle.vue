@@ -21,7 +21,7 @@
       <div class="card-image-container">
         <img
             v-if="isVisible"
-            :src="article.coverUrl || defaultImage"
+            :src="$img(article.coverUrl || defaultImage)"
             :alt="article.title || '封面'"
             class="card-image"
             @error="handleImageError"
@@ -36,7 +36,7 @@
         <div class="card-metadata">
           <div class="metadata-left">
             <div class="channel-info">
-              <img v-if="article.publisherAvatar" :src="article.publisherAvatar" alt="avatar" class="avatar" />
+              <img v-if="article.publisherAvatar" :src="$img(article.publisherAvatar)" alt="avatar" class="avatar" />
               <span class="channel-name">{{ article.publisherName || '未知发布者' }}</span>
             </div>
 <!--            <span class="views">{{ formatViews(article.readCount) }} 次观看</span>-->

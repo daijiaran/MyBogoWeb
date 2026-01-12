@@ -24,7 +24,7 @@
             <div v-if="isMobile" class="mobile-cover-section">
               <div class="cover-card">
                 <img
-                    :src="article.coverUrl ? `${apiBaseUrl}${article.coverUrl}` : ''"
+                    :src="$img(article.coverUrl)"
                     class="cover-image"
                     v-if="article.coverUrl"
                     :alt="article.title"
@@ -116,7 +116,7 @@
           <!-- 封面区域 -->
           <div class="cover-card">
             <img
-                :src="article.coverUrl ? `${apiBaseUrl}${article.coverUrl}` : ''"
+                :src="$img(article.coverUrl)"
                 class="cover-image"
                 v-if="article.coverUrl"
                 :alt="article.title"
@@ -193,8 +193,6 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css';
 import MarkDownReader from "@/components/Article/MarkDownReader.vue";
 import CommentSection from "../components/Comment/CommentSection.vue";
-import { getApiBaseUrl } from '../utils/apiConfig';
-
 // 配置 markdown 渲染
 marked.marked.setOptions({
   highlight(code, lang) {
@@ -210,9 +208,6 @@ marked.marked.setOptions({
 // 获取路由参数
 const route = useRoute();
 const userStore = useUserStore();
-
-// API 基础地址
-const apiBaseUrl = getApiBaseUrl();
 
 // 文章数据
 const article = ref({

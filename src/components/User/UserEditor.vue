@@ -25,7 +25,7 @@
             >
               <img
                   v-if="profileForm.avatarUrl"
-                  :src="profileForm.avatarUrl"
+                  :src="$img(profileForm.avatarUrl)"
                   class="avatar"
               />
               <el-icon v-else class="avatar-placeholder">

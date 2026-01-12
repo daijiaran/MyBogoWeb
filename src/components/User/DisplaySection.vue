@@ -127,7 +127,7 @@ onBeforeUnmount(stopAuto)
             v-for="(img, i) in images"
             v-show="i === currentIndex"
             :key="img.url"
-            :src="img.url"
+            :src="$img(img.url)"
             class="carousel-img"
         />
       </transition-group>

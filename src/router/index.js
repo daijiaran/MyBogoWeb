@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import {createRouter, createWebHashHistory} from 'vue-router'
 // 导入各主题对应的组件（根据实际需求创建这些组件）
 import Home from '../views/HomeView.vue'       // 首页组件
 import UnityProjectView from '../views/UnityProjectView.vue'     // 作品页面组件
@@ -55,7 +55,8 @@ const routes = [
 ]
 
 const router = createRouter({
-    history: createWebHistory(),  // 使用HTML5 history模式
+    // history: createWebHistory(),  // 使用HTML5 history模式
+    history: createWebHashHistory(),
     routes
 })
 

@@ -17,7 +17,7 @@
             :show-file-list="false"
             :on-success="handleCoverUploadSuccess"
         >
-          <img v-if="form.coverUrl" :src="form.coverUrl" class="cover-preview" />
+          <img v-if="form.coverUrl" :src="$img(form.coverUrl)" class="cover-preview" />
           <div v-else class="upload-placeholder">上传封面</div>
         </el-upload>
       </el-form-item>

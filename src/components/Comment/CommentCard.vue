@@ -236,7 +236,7 @@ const handleSubmitComment = async () => {
   <div class="comment-card">
     <div class="comment-header">
       <img
-          :src="commentUser?.avatar || '/user-avatar.png'"
+          :src="$img(commentUser?.avatar || '/user-avatar.png')"
           alt="用户头像"
           class="avatar"
           @error="handleAvatarError"

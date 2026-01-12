@@ -6,6 +6,7 @@
 
 <script setup>
 import { onMounted, onUnmounted, nextTick, ref, watch } from 'vue'
+import { getApiBaseUrl } from '../../utils/apiConfig';
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
@@ -71,7 +72,8 @@ const uploadImage = async (file, {onSuccess, onError}) => {
     const timeoutId = setTimeout(() => abortController.abort(), 30000)
 
     const token = localStorage.getItem('token')
-    const response = await fetch('/api/upload/image', {
+    const apiBaseUrl = getApiBaseUrl()
+    const response = await fetch(`${apiBaseUrl}/api/upload/image`, {
       method: 'POST',
       body: formData,
       signal: abortController.signal,

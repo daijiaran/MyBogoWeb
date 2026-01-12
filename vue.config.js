@@ -1,27 +1,23 @@
-// vue.config.js
-const isDevelopment = process.env.NODE_ENV === 'development';
+const { defineConfig } = require('@vue/cli-service')
 
-module.exports = {
-  publicPath: './', // 保证生产环境路径正确
-
-  configureWebpack: {
-    plugins: [
-      new (require('webpack')).DefinePlugin({
-        'import.meta.env.VITE_API_BASE_URL': JSON.stringify(
-            isDevelopment
-                ? (process.env.VITE_API_BASE_URL_develop || 'http://localhost:8080')
-                : '/api' // 生产环境通过 Nginx 代理
-        )
-      })
-    ]
+module.exports = defineConfig({
+  transpileDependencies: true,
+  publicPath: './', // 必须是 ./
+  outputDir: 'dist',
+  assetsDir: 'static',
+  productionSourceMap: false,
+  // 注入环境变量
+  chainWebpack: config => {
+    config.plugin('define').tap(args => {
+      args[0]['process.env'].VUE_APP_API_BASE_URL = JSON.stringify(process.env.VUE_APP_API_BASE_URL);
+      return args;
+    });
   },
-
   devServer: {
     port: 8082,
-    open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080', // 开发环境后端地址
+        target: 'http://localhost:8080',
         changeOrigin: true
       },
       '/images': {
@@ -30,4 +26,4 @@ module.exports = {
       }
     }
   }
-};
+})

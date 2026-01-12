@@ -1,71 +1,82 @@
 <template>
-  <template v-if="!isQuizMode">
-    <header class="navbar">
-      <button
-          class="back-btn"
-          v-if="isCollapsed"
-          @click="handleBack"
-      >
-        ← 返回
-      </button>
+  <transition name="nav-morph">
 
-      <transition name="navbar-anim">
-        <div
-            class="nav"
-            :class="{ 'collapsed': isCollapsed }"
-            v-show="true"
+    <div v-if="!isQuizMode" class="normal-nav-wrapper" key="normal">
+      <header class="navbar">
+        <button
+            class="back-btn"
+            v-if="isCollapsed"
+            @click="handleBack"
         >
-          <span class="title-logo" v-if="!isCollapsed">DigitalMaker</span>
+          ← 返回
+        </button>
 
-          <nav class="desktop-nav" v-if="!isCollapsed">
-            <router-link
-                v-for="item in menuItems"
-                :key="item.id"
-                :to="item.path"
-                :style="{ 'margin': `0 ${itemGap}px` }"
-                class="nav-link"
-            >
-              {{ item.title }}
-            </router-link>
-          </nav>
+        <transition name="navbar-anim">
+          <div
+              class="nav"
+              :class="{ 'collapsed': isCollapsed }"
+              v-show="true"
+          >
+            <span class="title-logo" v-if="!isCollapsed" @click="handleLogoClick">DigitalMaker</span>
 
-          <div class="hamburger" @click.stop="toggleMenu" style="display: none;">
-            <div class="hamburger-icon" />
-          </div>
-
-          <transition name="slide-down" appear>
-            <nav v-show="isMenuOpen" class="mobile-nav" style="display: none;">
+            <nav class="desktop-nav" v-if="!isCollapsed && !isMobile">
               <router-link
                   v-for="item in menuItems"
                   :key="item.id"
                   :to="item.path"
-                  class="mobile-link"
-                  @click="closeMenu"
+                  :style="{ 'margin': `0 ${itemGap}px` }"
+                  class="nav-link"
               >
                 {{ item.title }}
               </router-link>
             </nav>
-          </transition>
-        </div>
-      </transition>
-    </header>
 
-    <div class="user-btn" @click.stop="handleAvatarClick" v-if="!isCollapsed">
-      <span v-if="!isLogin" class="login-text">登录</span>
-      <img
-          v-else
-          :src="userAvatar"
-          alt="用户头像"
-          class="avatar-img"
-      >
+            <nav class="mobile-mini-nav" v-if="!isCollapsed && isMobile">
+              <router-link
+                  v-for="item in menuItems.filter(i => [2,3].includes(i.id))"
+                  :key="item.id"
+                  :to="item.path"
+                  class="nav-link mobile-top-link"
+              >
+                {{ item.title }}
+              </router-link>
+
+              <div class="hamburger-icon" @click.stop="openDrawer">
+              </div>
+            </nav>
+
+            <transition name="slide-down" appear>
+              <nav v-show="isMenuOpen" class="mobile-nav" style="display: none;">
+                <router-link
+                    v-for="item in menuItems"
+                    :key="item.id"
+                    :to="item.path"
+                    class="mobile-link"
+                    @click="closeMenu"
+                >
+                  {{ item.title }}
+                </router-link>
+              </nav>
+            </transition>
+          </div>
+        </transition>
+      </header>
+
+      <div class="user-btn" @click.stop="handleAvatarClick" v-if="!isCollapsed">
+        <span v-if="!isLogin" class="login-text">登录</span>
+        <img
+            v-else
+            :src="$img(userAvatar)"
+            alt="用户头像"
+            class="avatar-img"
+        >
+      </div>
     </div>
-  </template>
 
-  <div v-else class="quiz-home-btn-container">
-    <button class="quiz-home-btn" @click="goHome">
-      🏠 返回首页
-    </button>
-  </div>
+    <div v-else class="quiz-home-btn-container"  key="quiz" >
+      <span class="title-logo" v-if="!isCollapsed " @click="goHome">DigitalMaker</span>
+    </div>
+  </transition>
 
   <transition name="fade-in" appear>
     <div v-if="isPopupOpen" class="popup-container">
@@ -73,12 +84,41 @@
       <div class="popup-content" @click.stop>
         <template v-if="isLogin">
           <div class="user-popup">
-            <img :src="userAvatar" alt="用户头像" class="popup-avatar">
+            <img :src="$img(userAvatar)" alt="用户头像" class="popup-avatar">
             <p class="username">{{ userStore.username }}</p>
             <button class="logout-btn" @click="handleLogout">退出登录</button>
           </div>
         </template>
         <LoginAndRegister v-else @close="closePopup" />
+      </div>
+    </div>
+  </transition>
+
+  <transition name="drawer-slide">
+    <div v-if="isDrawerOpen && isMobile" class="drawer-container">
+      <div class="drawer-mask" @click="closeDrawer"></div>
+      <div class="mobile-drawer" @click.stop>
+        <div class="drawer-header">
+          <div class="drawer-user-section" @click="handleAvatarClick">
+            <img v-if="isLogin" :src="$img(userAvatar)" alt="用户头像" class="drawer-avatar">
+            <span class="drawer-username">{{ isLogin ? userStore.username : '登录' }}</span>
+          </div>
+          <div class="" @click="closeDrawer">
+            <div class="close-icon" />
+          </div>
+        </div>
+        
+        <nav class="drawer-nav">
+          <router-link
+              v-for="item in menuItems"
+              :key="item.id"
+              :to="item.path"
+              class="drawer-nav-link"
+              @click="closeDrawer"
+          >
+            {{ item.title }}
+          </router-link>
+        </nav>
       </div>
     </div>
   </transition>
@@ -96,17 +136,19 @@ export default {
   props: { itemGap: { type: Number, default: 40 } },
   data() {
     return {
+      windowWidth: window.innerWidth,
+      isDrawerOpen: false,
       menuItems: [
-        {id: 1, title: '首页', path: '/'},
-        {id: 2, title: 'Unity项目', path: '/UnityProject'},
-        {id: 3, title: '宣传视频', path: '/PromotionalVideoView'},
-        {id: 4, title: '日志', path: '/LogView'},
-        {id: 5, title: '刷题工具', path: '/quiz-app-container'},
+        { id: 1, title: '首页', path: '/' },
+        { id: 2, title: 'Unity项目', path: '/UnityProject' },
+        { id: 3, title: '宣传视频', path: '/PromotionalVideoView' },
+        { id: 4, title: '日志', path: '/LogView' },
+        { id: 5, title: '刷题工具', path: '/quiz-app-container' },
       ],
       isMenuOpen: false,
       isPopupOpen: false,
       isMounted: false,
-      isCollapsed: false, // 新增：控制导航栏收缩状态
+      isCollapsed: false,
     };
   },
   computed: {
@@ -119,20 +161,22 @@ export default {
     userStore() {
       return useUserStore();
     },
-    // 修改点3：新增计算属性，判断是否为刷题页面
     isQuizMode() {
       return this.$route.path === '/quiz-app-container';
+    },
+    isMobile() {
+      return this.windowWidth <= 768;
     }
   },
   mounted() {
-    // 监听自定义事件，用于从其他组件控制导航栏
     window.addEventListener('toggle-navbar', this.handleToggleNavbar);
+    window.addEventListener('resize', this.handleResize);
     this.isMounted = true;
     document.addEventListener('click', this.handleClickOutside);
   },
   beforeUnmount() {
-    // 移除事件监听
     window.removeEventListener('toggle-navbar', this.handleToggleNavbar);
+    window.removeEventListener('resize', this.handleResize);
     this.isMounted = false;
     document.removeEventListener('click', this.handleClickOutside);
   },
@@ -142,9 +186,11 @@ export default {
       if (this.isLogin && token) {
         this.$router.push('/user');
         this.closePopup();
+        this.closeDrawer();
       } else {
         this.isPopupOpen = true;
         this.isMenuOpen = false;
+        this.closeDrawer();
         if (this.isLogin && !token) {
           this.userStore.resetState();
         }
@@ -167,7 +213,6 @@ export default {
     handleClickOutside(e) {
       if (!this.isMounted) return;
       const currentEl = unref(this.$el);
-      // 注意：在刷题模式下，nav元素可能不存在，需要做非空判断
       if (currentEl && !currentEl.contains(e.target) && !this.isQuizMode) {
         this.closeMenu();
         this.closePopup();
@@ -178,24 +223,36 @@ export default {
       this.closePopup();
       this.$message.success('已成功退出登录');
     },
-    // 新增：处理返回按钮点击
     handleBack() {
-      this.isCollapsed = false; // 展开导航栏
-      this.$router.back(); // 回退到上一页
+      this.isCollapsed = false;
+      this.$router.back();
     },
-    // 新增：切换导航栏状态的方法
     toggleNavbar(collapsed) {
       this.isCollapsed = collapsed;
     },
-    // 新增：处理自定义事件
     handleToggleNavbar(e) {
       if (e && e.detail) {
         this.toggleNavbar(e.detail.collapsed);
       }
     },
-    // 修改点4：新增返回首页方法
     goHome() {
       this.$router.push('/');
+    },
+    handleResize() {
+      this.windowWidth = window.innerWidth;
+      if (!this.isMobile) this.isDrawerOpen = false;
+    },
+    openDrawer() {
+      this.isDrawerOpen = true;
+      this.isPopupOpen = false;
+    },
+    closeDrawer() {
+      this.isDrawerOpen = false;
+    },
+    handleLogoClick() {
+      if (this.isMobile || this.$route.path !== '/') {
+        this.goHome();
+      }
     }
   },
   setup() {
@@ -207,7 +264,56 @@ export default {
 </script>
 
 <style scoped>
-/* 基础布局样式 */
+/* ================= 动画核心代码 ================= */
+
+/* 1. 正常导航包裹层：由于内部 nav 是 fixed，包裹层需要定位以作为动画参照 */
+.normal-nav-wrapper {
+  position: absolute; /* 在动画期间与按钮重叠 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0; /* 不占据实际高度 */
+  z-index: 1500;
+  transform-origin: top center; /* 关键：从顶部中心开始缩放 */
+}
+
+/* 2. 动画过渡定义 */
+.nav-morph-enter-active,
+.nav-morph-leave-active {
+  /* 使用贝塞尔曲线模拟自然的形变效果 */
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- 场景 A: 从正常导航 -> 进入刷题模式 (Nav 收缩) --- */
+.nav-morph-leave-to.normal-nav-wrapper {
+  /* X轴压缩到0.1（收拢），Y轴微缩，透明度变0 */
+  transform: scaleX(0.1) scaleY(0.8);
+  opacity: 0;
+}
+
+/* --- 场景 A: 此时按钮进入 (Button 展开) --- */
+.nav-morph-enter-from.quiz-home-btn-container {
+  /* 初始状态：模拟它是从被压缩的状态变出来的 */
+  /* 注意：必须保留 translateX(-50%) 否则位置会偏 */
+  transform: translateX(-50%) scaleX(0.5) scaleY(0.5);
+  opacity: 0;
+}
+
+/* --- 场景 B: 从刷题模式 -> 返回正常导航 (Button 收缩) --- */
+.nav-morph-leave-to.quiz-home-btn-container {
+  transform: translateX(-50%) scaleX(0.5) scaleY(0.5);
+  opacity: 0;
+}
+
+/* --- 场景 B: 此时导航进入 (Nav 展开) --- */
+.nav-morph-enter-from.normal-nav-wrapper {
+  transform: scaleX(0.1) scaleY(0.8);
+  opacity: 0;
+}
+
+
+/* ================= 以下为原有样式 (保持不变) ================= */
+
 .navbar {
   display: flex;
   justify-content: center;
@@ -225,7 +331,7 @@ export default {
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 900px;
+  width: 1200px;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(80, 80, 80, 0.5);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -234,7 +340,6 @@ export default {
   transition: all 0.45s cubic-bezier(0.4, 0.15, 0.3, 1);
 }
 
-/* PC端用户按钮：右上角 */
 .user-btn {
   position: absolute;
   right: 6rem;
@@ -272,7 +377,6 @@ export default {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* 导航链接样式 */
 .desktop-nav {
   display: flex;
   justify-content: center;
@@ -326,12 +430,10 @@ export default {
   border-radius: 2px;
 }
 
-/* 隐藏汉堡菜单和折叠菜单（不再使用） */
 .hamburger, .mobile-nav {
   display: none !important;
 }
 
-/* 弹窗样式 */
 .popup-container {
   position: fixed;
   top: 0;
@@ -351,12 +453,21 @@ export default {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
   z-index: 5000;
   transform: scale(0);
   opacity: 0;
+  transition: backdrop-filter 0.35s ease, -webkit-backdrop-filter 0.35s ease;
   animation: mask-expand 0.35s forwards;
+}
+
+.popup-mask.enter-active {
+  animation: mask-expand 0.35s forwards, mask-blur-in 0.35s forwards;
+}
+
+.popup-mask.leave-active {
+  animation: mask-collapse 0.35s forwards, mask-blur-out 0.35s forwards;
 }
 
 .popup-content {
@@ -368,29 +479,14 @@ export default {
 }
 
 @keyframes mask-expand {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(0.5);
-    opacity: 0.3;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(0.5); opacity: 0.3; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes popup-scale {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .popup-mask.leave-active {
@@ -402,28 +498,25 @@ export default {
 }
 
 @keyframes mask-collapse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0);
-    opacity: 0;
-  }
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+@keyframes mask-blur-in {
+  0% { backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px); }
+  100% { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+}
+
+@keyframes mask-blur-out {
+  0% { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  100% { backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px); }
 }
 
 @keyframes popup-scale-reverse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0; }
 }
 
-/* 用户弹窗内容样式 */
 .user-popup {
   background: #1e1e1e;
   padding: 20px;
@@ -462,20 +555,12 @@ export default {
   background: #e34e4e;
 }
 
-/* 动画效果 */
 @keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(79, 195, 247, 0.6);
-  }
-  70% {
-    box-shadow: 0 0 0 8px rgba(79, 195, 247, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(79, 195, 247, 0);
-  }
+  0% { box-shadow: 0 0 0 0 rgba(79, 195, 247, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(79, 195, 247, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(79, 195, 247, 0); }
 }
 
-/* Logo样式（PC端显示/移动端隐藏） */
 .title-logo {
   font-family: 'Segoe UI', 'Montserrat', sans-serif;
   font-weight: 700;
@@ -497,68 +582,19 @@ export default {
   text-shadow: 0 0 10px rgba(37, 117, 252, 0.3);
 }
 
-/* 移动端布局适配（仅修改元素间隔） */
 @media (max-width: 768px) {
-  /* 1. 移动端隐藏Logo */
-  .title-logo {
-    display: none;
-  }
-
-  /* 2. 导航栏基础样式保持不变，仅调整间距 */
-  .nav {
-    top: 0;
-    left: 0;
-    right: 0;
-    transform: none;
-    width: 100%;
-    border-radius: 40px;
-  }
-
-  /* 3. 核心修改：缩小导航项之间的间隔 */
-  .desktop-nav {
-    width: 100%;
-    justify-content: center;
-    padding: 0 0.5rem; /* 左右预留少量空间，避免贴边 */
-  }
-
-  .nav-link {
-    /* 覆盖PC端的itemGap，设置移动端紧凑间隔 */
-    margin: 0 8px !important;
-    font-size: 1rem; /* 保持字体大小，仅缩间距 */
-  }
-
-  /* 4. 用户按钮位置保持不变 */
-  .user-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    top: auto;
-    right: auto;
-    transform: translateX(-50%);
-    width: 50px;
-    height: 50px;
-  }
-
-  .user-btn:hover {
-    transform: translateX(-50%) scale(1.05);
-  }
+  .nav { top: 0; left: 0; right: 0; transform: none; width: 100%; border-radius: 40px; }
+  .desktop-nav { width: 100%; justify-content: center; padding: 0 0.5rem; }
+  .nav-link { margin: 0 8px !important; font-size: 1rem; }
+  .user-btn { position: fixed; bottom: 20px; left: 50%; top: auto; right: auto; transform: translateX(-50%); width: 50px; height: 50px; }
+  .user-btn:hover { transform: translateX(-50%) scale(1.05); }
 }
 
-/* 小屏移动端微调 */
 @media (max-width: 480px) {
-  .nav-link {
-    font-size: 0.8rem;
-    padding: 4px 6px;
-  }
-
-  .user-btn {
-    width: 45px;
-    height: 45px;
-    bottom: 15px;
-  }
+  .nav-link { font-size: 0.8rem; padding: 4px 6px; }
+  .user-btn { width: 45px; height: 45px; bottom: 15px; }
 }
 
-/* 新增：返回按钮样式 */
 .back-btn {
   position: fixed;
   left: 20px;
@@ -580,14 +616,8 @@ export default {
 }
 
 @keyframes back-btn-fade-in {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .back-btn:hover {
@@ -595,7 +625,6 @@ export default {
   transform: translateX(2px);
 }
 
-/* 新增：导航栏收缩状态样式 */
 .nav.collapsed {
   width: auto;
   padding: 0;
@@ -609,27 +638,14 @@ export default {
   height: auto;
 }
 
-/* 在收缩状态下隐藏不需要的元素 */
 .nav.collapsed .title-logo,
-.nav.collapsed .desktop-nav {
-  display: none;
-}
+.nav.collapsed .desktop-nav { display: none; }
 
-/* 响应式调整 */
 @media (max-width: 768px) {
-  .back-btn {
-    left: 15px;
-    top: 15px;
-    padding: 6px 12px;
-    font-size: 0.85rem;
-  }
-
-  .nav.collapsed {
-    transform: translateX(-80px) scale(0.7);
-  }
+  .back-btn { left: 15px; top: 15px; padding: 6px 12px; font-size: 0.85rem; }
+  .nav.collapsed { transform: translateX(-80px) scale(0.7); }
 }
 
-/* 导航栏动画：缩放 + 位移 + 模糊 + 渐隐 */
 .navbar-anim-enter-active,
 .navbar-anim-leave-active {
   transition: all 0.45s cubic-bezier(0.4, 0.15, 0.3, 1);
@@ -649,13 +665,12 @@ export default {
   opacity: 0;
 }
 
-/* 修改点5：新增刷题页返回按钮样式 */
 .quiz-home-btn-container {
   position: fixed;
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 2000; /* 必须高于 quiz-app-container 的 100 */
+  z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -672,7 +687,7 @@ export default {
   font-size: 1rem;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
 .quiz-home-btn:hover {
@@ -680,5 +695,278 @@ export default {
   transform: scale(1.05);
   border-color: #00ffd0;
   color: #00ffd0;
+}
+
+/* ================= 移动端相关样式 ================= */
+
+/* 移动端迷你导航栏 */
+.mobile-mini-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 1rem;
+}
+
+.mobile-top-link {
+  font-size: 0.9rem !important;
+  margin: 0 6px !important;
+  padding: 6px 10px !important;
+}
+
+/* 图标按钮基础样式 */
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* 汉堡菜单按钮 */
+.mobile-menu-btn {
+  margin-left: auto;
+}
+
+.hamburger-icon {
+  width: 20px;
+  height: 2px;
+  background: #e0e0e0;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.hamburger-icon::before,
+.hamburger-icon::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 2px;
+  background: #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.hamburger-icon::before {
+  top: -6px;
+}
+
+.hamburger-icon::after {
+  top: 6px;
+}
+
+/* 关闭按钮 */
+.close-icon {
+  width: 20px;
+  height: 2px;
+  background: #e0e0e0;
+  position: relative;
+  transform: rotate(45deg);
+  transition: all 0.3s ease;
+}
+
+.close-icon::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 2px;
+  background: #e0e0e0;
+  transform: rotate(-90deg);
+  transition: all 0.3s ease;
+}
+
+/* 侧边抽屉容器 */
+.drawer-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 6000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawer-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: backdrop-filter 0.35s ease, -webkit-backdrop-filter 0.35s ease;
+  animation: mask-expand 0.35s forwards, mask-blur-in 0.35s forwards;
+}
+
+.drawer-slide-enter-active .drawer-mask {
+  animation: mask-expand 0.35s forwards, mask-blur-in 0.35s forwards;
+}
+
+.drawer-slide-leave-active .drawer-mask {
+  animation: mask-collapse 0.35s forwards, mask-blur-out 0.35s forwards;
+}
+
+.mobile-drawer {
+  position: relative;
+  width: 85%;
+  max-width: 320px;
+  height: 100%;
+  background: #1a1a1a;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+  animation: drawer-slide-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 抽屉头部 */
+.drawer-header {
+  padding: 2rem 1.5rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drawer-user-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.drawer-user-section:hover {
+  transform: translateX(4px);
+}
+
+.drawer-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #4fc3f7;
+}
+
+.drawer-username {
+  color: #e0e0e0;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+/* 抽屉导航菜单 */
+.drawer-nav {
+  flex: 1;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.drawer-nav-link {
+  color: rgba(220, 220, 220, 0.9);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.2rem;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+}
+
+.drawer-nav-link:hover {
+  background: rgba(79, 195, 247, 0.1);
+  color: #4fc3f7;
+  transform: translateX(8px);
+}
+
+.drawer-nav-link.router-link-active {
+  background: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7 !important;
+  font-weight: 600;
+}
+
+.drawer-nav-link.router-link-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  background: #4fc3f7;
+  border-radius: 0 2px 2px 0;
+}
+
+/* 动画效果 */
+@keyframes drawer-slide-in {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.drawer-slide-enter-active,
+.drawer-slide-leave-active {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-slide-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.drawer-slide-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .nav {
+    padding: 1rem;
+  }
+  
+  .title-logo {
+    font-size: 1.2rem !important;
+    margin-right: 1rem !important;
+  }
+  
+  .user-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-mini-nav {
+    gap: 8px;
+    padding: 0 0.5rem;
+  }
+  
+  .mobile-top-link {
+    font-size: 0.8rem !important;
+    padding: 4px 8px !important;
+  }
+  
+  .mobile-drawer {
+    width: 100%;
+  }
+  
+  .drawer-nav-link {
+    font-size: 1.1rem;
+    padding: 10px 14px;
+  }
 }
 </style>

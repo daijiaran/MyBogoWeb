@@ -58,7 +58,7 @@
           <header class="user-header">
             <div class="avatar-wrapper">
               <img
-                  :src="userAvatar"
+                  :src="$img(userAvatar)"
                   alt="用户头像"
                   class="user-avatar"
                   :class="{ 'default-avatar': !userStore.avatarUrl }"
