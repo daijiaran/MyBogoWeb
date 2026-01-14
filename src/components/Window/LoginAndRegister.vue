@@ -221,62 +221,103 @@ const goBackToRegister = () => {
 /* ===== 弹窗主体 ===== */
 .auth-card {
   width: 380px;
-  padding: 28px 26px;
-  background: rgba(35, 32, 49, 0.9); /* 深紫半透明玻璃 */
-  backdrop-filter: blur(18px);
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 35px rgba(0,0,0,0.45);
-  color: white;
+  padding: 40px;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  color: #f0f0f0;
   z-index: 1000;
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
 }
 
 /* ===== 顶部标签（登录 / 注册） ===== */
 .auth-tabs {
   display: flex;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tab-btn {
   flex: 1;
   padding: 12px 0;
   font-size: 16px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   background: transparent;
-  color: #bfbad9;
+  color: rgba(240, 240, 240, 0.6);
   border: none;
-  border-bottom: 2px solid transparent;
   cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
 }
 
 .tab-btn.active {
-  color: #d3c6ff;
-  border-bottom: 2px solid #9d72ff;
+  color: #ffffff;
+}
+
+.tab-btn.active::after {
+  transform: scaleX(1);
+}
+
+.step-title {
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 30px;
+  color: #ffffff;
+  text-align: center;
 }
 
 /* ===== 表单布局 ===== */
 .form-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
 }
 
 label {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 14px;
-  color: #e4dfff;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(240, 240, 240, 0.8);
 }
 
 input {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.25);
-  color: #fff;
+  padding: 12px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-weight: 300;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border-bottom-color: rgba(255, 255, 255, 0.3);
 }
 
 input::placeholder {
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 300;
 }
 
 /* ===== 密码格 ===== */
@@ -288,65 +329,196 @@ input::placeholder {
 
 .toggle-pwd {
   position: absolute;
-  right: 10px;
-  background: rgba(255,255,255,0.25);
+  right: 0;
+  background: transparent;
   border: none;
-  padding: 3px 6px;
-  border-radius: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 0 0;
   cursor: pointer;
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.toggle-pwd:hover {
+  color: rgba(255, 255, 255, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.3);
 }
 
 /* ===== 按钮组 ===== */
 .btn-group {
   display: flex;
   justify-content: space-between;
-  margin-top: 15px;
+  margin-top: 30px;
 }
 
 .submit-btn {
   flex: 3;
-  margin-right: 8px;
-  padding: 10px 0;
-  background: #8d5cff;
-  border-radius: 8px;
-  color: white;
-  border: none;
+  margin-right: 15px;
+  padding: 15px 0;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 14px;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.submit-btn:hover::before {
+  left: 100%;
 }
 
 .submit-btn:hover {
-  background: #a67bff;
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .cancel-btn {
   flex: 2;
-  padding: 10px 0;
-  background: rgba(255,255,255,0.3);
-  border-radius: 8px;
-  border: none;
-  color: white;
+  padding: 15px 0;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 14px;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.cancel-btn:hover::before {
+  left: 100%;
 }
 
 .cancel-btn:hover {
-  background: rgba(255,255,255,0.45);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .error-message {
-  background: rgba(255, 90, 90, 0.28);
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  margin-bottom: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 300;
+  font-size: 14px;
+}
+
+/* 表单操作区域 */
+.form-actions {
+  margin-bottom: 10px;
+}
+
+.code-actions {
+  margin-bottom: 10px;
 }
 
 /* 返回注册按钮 */
 .back-btn {
-  margin-top: 12px;
+  margin-top: 20px;
   font-size: 14px;
-  color: #d1c1ff;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
   background: none;
   border: none;
   cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.back-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
+  transition: width 0.3s ease;
+}
+
+.back-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.back-btn:hover::after {
+  width: 100%;
+}
+
+/* 忘记密码链接 */
+.forgot-link {
+  display: block;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.forgot-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
+  transition: width 0.3s ease;
+}
+
+.forgot-link:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.forgot-link:hover::after {
+  width: 100%;
+}
+
+/* 验证码描述 */
+.code-desc {
+  font-size: 12px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 8px;
+  line-height: 1.5;
 }
 
 </style>

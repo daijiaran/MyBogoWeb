@@ -81,7 +81,7 @@
         </div>
 
         <!-- 个人资料区域 -->
-        <div v-if="currentActive === 'personal'" class="Personal-Profile content-section">
+        <div v-if="currentActive === 'personal'" class="background: #0a0a0a">
           <UserEditor></UserEditor>
         </div>
 
@@ -207,27 +207,26 @@ onUnmounted(() => {
 }
 
 .home-css {
-  display: flex; /* 关键：启用弹性布局 */
-  flex-direction: column; /* 关键：子元素垂直排列（默认是水平row） */
-  gap: 10px; /* 现在生效：控制垂直方向子元素的间距 */
-  /* 可选：添加宽度/高度，确保布局完整（根据你的页面需求调整） */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
-  /* 若需要垂直填满父容器，可加：height: 100%; */
 }
 
 .Mian{
   padding-top: 60px;
+  background: #0a0a0a;
 }
 
 /* 整体布局 */
 .user-page {
   max-height: calc(100vh - 60PX);
   padding: 20px 20px 20px;
-  font-family: 'Segoe UI', Roboto, Oxygen, sans-serif;
-  color: #e0e0e0;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  color: #f0f0f0;
   display: flex;
-  gap: 20px;
-  background: #000000;
+  gap: 1px;
+  background: rgb(10, 10, 10);
   height: 100%;
   position: relative;
   width: 100%;
@@ -242,12 +241,13 @@ onUnmounted(() => {
   gap: 20px;
   width: 100%;
   box-sizing: border-box;
-  transition: all 0.3s ease; /* 平滑过渡 */
+  transition: all 0.3s ease;
+  background: #0a0a0a;
 }
 
 /* 侧边栏隐藏时，内容区全屏显示 */
 .main-content.full-width {
-  margin-left: 0 !important; /* 覆盖原有margin */
+  margin-left: 0 !important;
 }
 
 /* 用户信息头部 */
@@ -257,9 +257,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 30px;
   padding: 30px;
-  background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   word-wrap: break-word;
   width: 100%;
   box-sizing: border-box;
@@ -275,27 +274,27 @@ onUnmounted(() => {
   height: 150px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid white;
-  box-shadow: 0 4px 15px rgba(236, 236, 236, 0.1);
-  transition: transform 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
 }
 
 .user-avatar:hover {
-  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .default-avatar {
-  background-color: #e3f2fd;
+  background-color: rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 60px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .default-avatar-icon {
   position: absolute;
   font-size: 60px;
-  color: #1976d2;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .user-info {
@@ -305,40 +304,43 @@ onUnmounted(() => {
 .user-name {
   margin: 0 0 10px;
   font-size: 2.2rem;
-  color: #e0e0e0;
-  font-weight: 700;
+  color: #ffffff;
+  font-weight: 300;
+  letter-spacing: 1px;
 }
 
 .user-id {
   margin: 0 0 15px;
   font-size: 1rem;
-  color: #999;
+  color: rgba(255, 255, 255, 0.6);
   padding: 5px 10px;
-  background: rgba(45, 45, 45, 0.6);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: inline-block;
+  font-weight: 300;
 }
 
 .user-status {
-  color: #999;
+  color: rgba(255, 255, 255, 0.6);
   font-style: italic;
+  font-weight: 300;
 }
 
 .error-message {
-  color: #ff6b6b;
-  background: rgba(255, 107, 107, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 8px 12px;
-  border-radius: 4px;
   display: inline-block;
+  font-weight: 300;
 }
 
 /* 内容区样式 */
 .content-section {
-  background: #1e1e1e;
-  border-radius: 12px;
+  background: #000000;
+  border: 1px solid rgb(0, 0, 0);
   padding: 30px;
   min-height: 800px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -348,50 +350,67 @@ onUnmounted(() => {
 .section-title {
   margin: 0 0 25px;
   font-size: 1.5rem;
-  color: #434343;
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   padding-bottom: 10px;
-  border-bottom: 1px solid #555;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* 个人资料、发布、消息通知区域通用样式 */
 .profile-content, .release-content, .notifications-list {
   line-height: 1.8;
-  color: #3a3a3a;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .Personal-Profile {
-  color: #e0e0e0;
-  min-height: 100%; /* 改为百分比填充 */
+  color: #f0f0f0;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  background-color: #1e1e1e;
+  background-color: #0a0a0a;
   width: 100%;
-  padding: 20px; /* 恢复合理的内边距 */
-  box-sizing: border-box; /* 确保padding包含在宽度内 */
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* 或者更精确的修复 */
 .Personal-Profile {
-  color: #e0e0e0;
-  min-height: 100vh; /* 使用视口高度 */
-  background-color: #1e1e1e;
+  color: #f0f0f0;
+  min-height: 100vh;
+  background-color: #0a0a0a;
   width: 100%;
-  padding: 0; /* 保持0，但确保子元素正确处理 */
+  padding: 0;
 }
 
 .Personal-Profile .profile-edit-container {
-  padding: 20px; /* 为编辑页面容器单独设置内边距 */
+  padding: 20px;
   min-height: 100vh;
-  background-color: #1e1e1e;
+  background-color: #0a0a0a;
 }
 
 .notification-item:last-child {
   border-bottom: none;
 }
 
-/* 左侧边栏样式（桌面端）- 新增过渡效果 */
+.notification-item {
+  padding: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-weight: 300;
+}
+
+.notification-item p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 5px;
+}
+
+.notification-item span {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+ /* 左侧边栏样式（桌面端） */
 .sidebar {
   width: 240px;
   flex-shrink: 0;
@@ -399,65 +418,81 @@ onUnmounted(() => {
   position: sticky;
   top: 20px;
   height: fit-content;
-  background: #000000;
-  border-radius: 12px;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0;
   padding: 20px 15px;
-  box-shadow: 0 4px 10px rgba(154, 154, 154, 0.5);
-  transition: all 0.3s ease; /* 平滑过渡 */
-  overflow: hidden; /* 隐藏超出部分 */
+  box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
 /* 侧边栏隐藏状态 */
 .sidebar.hidden {
   width: 0;
   padding: 0;
-  box-shadow: none;
-  border-radius: 0;
+  border: none;
 }
 
 .sidebar-menu {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 1px;
 }
 
 .menu-item {
   width: 100%;
   padding: 15px 18px;
-  border: 1.5px solid #555;
-  border-radius: 10px;
-  background: #1e1e1e;
-  color: #e0e0e0;
+  border: none;
+  background: #0a0a0a;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;
+  position: relative;
+}
+
+.menu-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 18px;
+  width: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  transition: width 0.3s ease;
+}
+
+.menu-item:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.menu-item:hover::after {
+  width: calc(100% - 36px);
+}
+
+.menu-item.active {
+  color: #ffffff;
+}
+
+.menu-item.active::after {
+  width: calc(100% - 36px);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .menu-icon {
   font-size: 1.2rem;
 }
 
-.menu-item:not(.active):hover {
-  background: #2d2d2d;
-  border-color: #777;
-}
-
-.menu-item.active {
-  background: rgba(79, 195, 247, 0.2) !important;
-  color: #4fc3f7;
-  border-color: #4fc3f7;
-  box-shadow: 0 2px 6px rgba(79, 195, 247, 0.3);
-}
-
-.menu-item.active:hover {
-  background: rgba(79, 195, 247, 0.3) !important;
-  border-color: #4fc3f7;
+.menu-text {
+  font-weight: 300;
 }
 
 /* 折叠按钮样式（侧边栏显示时，在侧边栏底部） */
@@ -466,10 +501,18 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   margin-top: 20px;
-  background-color: #2d2d2d !important;
-  border-color: #555 !important;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 10px;
-  color: #e0e0e0;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 0;
 }
 
 .toggle-sidebar-btn .menu-icon {
@@ -477,8 +520,8 @@ onUnmounted(() => {
 }
 
 .toggle-sidebar-btn:hover {
-  background-color: #3a3a3a !important;
-  border-color: #777 !important;
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* 展开按钮样式（侧边栏隐藏时，固定在左侧中间） */
@@ -487,17 +530,16 @@ onUnmounted(() => {
   left: -15px;
   top: 90%;
   transform: translateY(-50%);
-  background-color: #1e1e1e;
-  border: 1px solid #555;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-left: none;
   border-radius: 0 16px 16px 0;
   padding: 18px 20px;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
   z-index: 999;
   transition: all 0.3s ease;
-  color: #999;
+  color: rgba(255, 255, 255, 0.7);
   width: auto;
   margin: 0;
   display: flex;
@@ -515,12 +557,12 @@ onUnmounted(() => {
 .toggle-sidebar-btn.expand-btn .menu-text {
   font-size: 0.85rem;
   white-space: nowrap;
+  font-weight: 300;
 }
 
 .toggle-sidebar-btn.expand-btn:hover {
-  background-color: #2d2d2d;
-  padding: 18px 14px;
-  color: #4fc3f7;
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* 平板端响应式调整 (769px - 1024px) */
@@ -557,7 +599,7 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 15px 15px 0;
     gap: 20px;
-    background-color: #1a1a1a;
+    background-color: #000000;
     min-height: 100vh;
     overflow-x: hidden;
   }
@@ -570,13 +612,12 @@ onUnmounted(() => {
     width: 100vw;
     max-width: 100%;
     margin-top: 92vh;
-    background: #1e1e1e;
+    background: #0a0a0a;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px 20px 0 0;
     padding: 10px 15px;
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
     z-index: 999;
-    box-shadow: 0 -3px 20px rgba(0, 0, 0, 0.5);
-    border-top: 1px solid #555;
     box-sizing: border-box;
     height: auto;
   }
@@ -585,6 +626,7 @@ onUnmounted(() => {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
+    background: rgba(255, 255, 255, 0.05);
     align-items: center;
   }
 
@@ -593,13 +635,12 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 8px 0;
-    font-size: 0.7rem;
+    padding: 15px 10px;
     gap: 4px;
     border: none;
     background: transparent;
     border-radius: 10px;
-    color: #999;
+    color: rgba(255, 255, 255, 0.7);
     min-height: 50px;
   }
 
@@ -609,8 +650,8 @@ onUnmounted(() => {
   }
 
   .menu-item.active {
-    color: #4fc3f7;
-    background-color: rgba(79, 195, 247, 0.2);
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
   }
 
   .menu-icon {
@@ -639,8 +680,8 @@ onUnmounted(() => {
 
   .user-name {
     font-size: 1.5rem;
-    color: #e0e0e0;
-    font-weight: 700;
+    color: #ffffff;
+    font-weight: 300;
   }
 
   .content-section {
@@ -655,64 +696,81 @@ onUnmounted(() => {
   }
 
   .menu-item:active {
-    transform: scale(0.95);
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.2);
   }
 }
 
 /* 小屏手机优化 (≤480px) */
 @media (max-width: 480px) {
   .user-page {
-    padding: 10px 10px 0;
+    padding: 8px 8px 0;
   }
 
   .sidebar {
-    padding: 8px 10px;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    padding: 6px 8px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
   }
 
   .sidebar-menu {
     grid-template-columns: repeat(4, 1fr);
-    gap: 5px;
+    gap: 3px;
   }
 
   .menu-item {
-    font-size: 0.68rem;
-    padding: 6px 3px;
-    min-height: 45px;
-    gap: 2px;
+    font-size: 0.65rem;
+    padding: 8px 2px;
+    min-height: 48px;
+    gap: 3px;
+    border-radius: 8px;
   }
 
   .menu-icon {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .main-content {
-    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+    padding-bottom: calc(75px + env(safe-area-inset-bottom));
   }
 
   .user-header {
-    padding: 18px 10px;
-    gap: 12px;
+    padding: 15px 8px;
+    gap: 10px;
   }
 
   .user-avatar {
-    width: 85px;
-    height: 85px;
+    width: 80px;
+    height: 80px;
   }
 
   .user-name {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 
   .content-section {
-    padding: 15px 10px;
+    padding: 12px 8px;
   }
 }
 
 /* 超小屏手机优化 (≤375px) */
 @media (max-width: 375px) {
   .menu-item {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
+    padding: 7px 1px;
+    min-height: 46px;
+  }
+
+  .menu-icon {
+    font-size: 0.9rem;
+  }
+
+  .user-avatar {
+    width: 75px;
+    height: 75px;
+  }
+
+  .user-name {
+    font-size: 1.1rem;
   }
 }
 

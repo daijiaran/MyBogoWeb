@@ -20,26 +20,43 @@
             <span class="title-logo" v-if="!isCollapsed" @click="handleLogoClick">DigitalMaker</span>
 
             <nav class="desktop-nav" v-if="!isCollapsed && !isMobile">
-              <router-link
-                  v-for="item in menuItems"
-                  :key="item.id"
-                  :to="item.path"
-                  :style="{ 'margin': `0 ${itemGap}px` }"
-                  class="nav-link"
-              >
-                {{ item.title }}
-              </router-link>
+              <template v-for="item in menuItems" :key="item.id">
+                <router-link
+                    v-if="item.id !== 5"
+                    :to="item.path"
+                    :style="{ 'margin': `0 ${itemGap}px` }"
+                    class="nav-link"
+                >
+                  {{ item.title }}
+                </router-link>
+                <div
+                    v-else
+                    :style="{ 'margin': `0 ${itemGap}px` }"
+                    class="nav-link"
+                    @click="handleQuizToolClick"
+                >
+                  {{ item.title }}
+                </div>
+              </template>
             </nav>
 
             <nav class="mobile-mini-nav" v-if="!isCollapsed && isMobile">
-              <router-link
-                  v-for="item in menuItems.filter(i => [2,3].includes(i.id))"
-                  :key="item.id"
-                  :to="item.path"
-                  class="nav-link mobile-top-link"
-              >
-                {{ item.title }}
-              </router-link>
+              <template v-for="item in menuItems.filter(i => [2,3].includes(i.id))" :key="item.id">
+                <router-link
+                    v-if="item.id !== 5"
+                    :to="item.path"
+                    class="nav-link mobile-top-link"
+                >
+                  {{ item.title }}
+                </router-link>
+                <div
+                    v-else
+                    class="nav-link mobile-top-link"
+                    @click="handleQuizToolClick"
+                >
+                  {{ item.title }}
+                </div>
+              </template>
 
               <div class="hamburger-icon" @click.stop="openDrawer">
               </div>
@@ -47,15 +64,23 @@
 
             <transition name="slide-down" appear>
               <nav v-show="isMenuOpen" class="mobile-nav" style="display: none;">
-                <router-link
-                    v-for="item in menuItems"
-                    :key="item.id"
-                    :to="item.path"
-                    class="mobile-link"
-                    @click="closeMenu"
-                >
-                  {{ item.title }}
-                </router-link>
+                <template v-for="item in menuItems" :key="item.id">
+                  <router-link
+                      v-if="item.id !== 5"
+                      :to="item.path"
+                      class="mobile-link"
+                      @click="closeMenu"
+                  >
+                    {{ item.title }}
+                  </router-link>
+                  <div
+                      v-else
+                      class="mobile-link"
+                      @click="handleQuizToolClick"
+                  >
+                    {{ item.title }}
+                  </div>
+                </template>
               </nav>
             </transition>
           </div>
@@ -109,15 +134,23 @@
         </div>
         
         <nav class="drawer-nav">
-          <router-link
-              v-for="item in menuItems"
-              :key="item.id"
-              :to="item.path"
-              class="drawer-nav-link"
-              @click="closeDrawer"
-          >
-            {{ item.title }}
-          </router-link>
+          <template v-for="item in menuItems" :key="item.id">
+            <router-link
+                v-if="item.id !== 5"
+                :to="item.path"
+                class="drawer-nav-link"
+                @click="closeDrawer"
+            >
+              {{ item.title }}
+            </router-link>
+            <div
+                v-else
+                class="drawer-nav-link"
+                @click="handleQuizToolClick"
+            >
+              {{ item.title }}
+            </div>
+          </template>
         </nav>
       </div>
     </div>
@@ -253,6 +286,16 @@ export default {
       if (this.isMobile || this.$route.path !== '/') {
         this.goHome();
       }
+    },
+    handleQuizToolClick() {
+      if (this.isLogin) {
+        this.$router.push('/quiz-app-container');
+      } else {
+        this.$message.info('请登录后使用刷题工具');
+        this.isPopupOpen = true;
+        this.isMenuOpen = false;
+        this.closeDrawer();
+      }
     }
   },
   setup() {
@@ -326,41 +369,59 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 1rem 2rem;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(10, 10, 10, 0.8);
   position: fixed;
-  top: 10px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   width: 1200px;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(80, 80, 80, 0.5);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  border-radius: 40px;
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
   height: 60px;
   transition: all 0.45s cubic-bezier(0.4, 0.15, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
 }
 
 .user-btn {
   position: absolute;
   right: 6rem;
-  top: 10px;
+  top: 20px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  transition: transform 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
   z-index: 1010;
+  overflow: hidden;
+}
+
+.user-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.user-btn:hover::before {
+  left: 100%;
 }
 
 .login-text {
-  color: #e0e0e0;
+  color: #f0f0f0;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   padding: 0 8px;
 }
 
@@ -369,12 +430,12 @@ export default {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .user-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
 .desktop-nav {
@@ -384,50 +445,51 @@ export default {
 }
 
 .nav-link {
-  color: rgba(220, 220, 220, 0.9);
+  color: rgba(240, 240, 240, 0.8);
   text-decoration: none;
-  font-weight: 500;
-  font-size: 1.1rem;
+  font-weight: 300;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   padding: 8px 12px;
-  border-radius: 4px;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
 }
 
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  transition: width 0.3s ease;
+}
+
 .nav-link:hover {
-  color: #00ffd0;
-  transform: translateY(-2px);
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  color: #ffffff;
 }
 
 .nav-link:hover::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
   width: 70%;
-  height: 2px;
-  background: #4fc3f7;
-  border-radius: 2px;
-  animation: pulse 1.5s infinite;
 }
 
 .router-link-active {
-  color: #4fc3f7 !important;
-  font-weight: 600;
+  color: #ffffff !important;
+  font-weight: 400;
 }
 
-.router-link-active::before {
+.router-link-active::after {
   content: '';
   position: absolute;
   bottom: -5px;
   left: 50%;
   transform: translateX(-50%);
   width: 70%;
-  height: 3px;
-  background: #4fc3f7;
-  border-radius: 2px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .hamburger, .mobile-nav {
@@ -518,41 +580,64 @@ export default {
 }
 
 .user-popup {
-  background: #1e1e1e;
-  padding: 20px;
-  border-radius: 12px;
+  background: #0a0a0a;
+  padding: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   text-align: center;
   width: 280px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 }
 
 .popup-avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  margin: 0 auto 15px;
+  margin: 0 auto 20px;
   object-fit: cover;
-  border: 3px solid #2d2d2d;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .username {
-  font-weight: 600;
-  margin-bottom: 20px;
-  color: #e0e0e0;
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin-bottom: 25px;
+  color: #f0f0f0;
+  font-size: 16px;
 }
 
 .logout-btn {
-  background: #f56c6c;
-  color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 20px;
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 24px;
+  border-radius: 0;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 14px;
+  overflow: hidden;
+  position: relative;
+}
+
+.logout-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.logout-btn:hover::before {
+  left: 100%;
 }
 
 .logout-btn:hover {
-  background: #e34e4e;
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 @keyframes pulse {
@@ -562,37 +647,100 @@ export default {
 }
 
 .title-logo {
-  font-family: 'Segoe UI', 'Montserrat', sans-serif;
-  font-weight: 700;
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
+  font-weight: 100;
   font-size: 1.5rem;
-  letter-spacing: -0.05em;
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  letter-spacing: -1px;
+  color: #ffffff;
   display: inline-block;
   text-align: left;
   margin-right: 2rem;
   padding: 0.2em 0;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .title-logo:hover {
-  transform: scale(1.03);
-  text-shadow: 0 0 10px rgba(37, 117, 252, 0.3);
+  opacity: 0.8;
 }
 
 @media (max-width: 768px) {
-  .nav { top: 0; left: 0; right: 0; transform: none; width: 100%; border-radius: 40px; }
-  .desktop-nav { width: 100%; justify-content: center; padding: 0 0.5rem; }
-  .nav-link { margin: 0 8px !important; font-size: 1rem; }
-  .user-btn { position: fixed; bottom: 20px; left: 50%; top: auto; right: auto; transform: translateX(-50%); width: 50px; height: 50px; }
-  .user-btn:hover { transform: translateX(-50%) scale(1.05); }
+  .nav { 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    transform: none; 
+    width: 100%; 
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .desktop-nav { 
+    width: 100%; 
+    justify-content: center; 
+    padding: 0 0.5rem; 
+  }
+  
+  .nav-link { 
+    margin: 0 8px !important; 
+    font-size: 0.9rem; 
+  }
+  
+  .user-btn { 
+    position: fixed; 
+    bottom: 20px; 
+    left: 50%; 
+    top: auto; 
+    right: auto; 
+    transform: translateX(-50%); 
+    width: 50px; 
+    height: 50px; 
+  }
+  
+  .user-btn:hover { 
+    transform: translateX(-50%); 
+  }
+  
+  .title-logo {
+    font-size: 1.2rem !important;
+    margin-right: 1rem !important;
+  }
 }
 
 @media (max-width: 480px) {
-  .nav-link { font-size: 0.8rem; padding: 4px 6px; }
-  .user-btn { width: 45px; height: 45px; bottom: 15px; }
+  .nav-link { 
+    font-size: 0.8rem; 
+    padding: 4px 6px; 
+  }
+  
+  .user-btn { 
+    width: 45px; 
+    height: 45px; 
+    bottom: 15px; 
+  }
+  
+  .title-logo {
+    font-size: 1rem !important;
+  }
+  
+  .mobile-mini-nav {
+    gap: 8px;
+    padding: 0 0.5rem;
+  }
+  
+  .mobile-top-link {
+    font-size: 0.8rem !important;
+    padding: 4px 8px !important;
+  }
+  
+  .mobile-drawer {
+    width: 100%;
+  }
+  
+  .drawer-nav-link {
+    font-size: 1rem;
+    padding: 10px 14px;
+  }
 }
 
 .back-btn {
@@ -600,19 +748,37 @@ export default {
   left: 20px;
   top: 20px;
   z-index: 1010;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  border: none;
-  border-radius: 20px;
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
   padding: 8px 16px;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   opacity: 1;
-  height: 50px;
+  height: 40px;
   transform: translateX(0);
   transition: all 0.35s ease;
   animation: back-btn-fade-in 0.35s ease;
+  overflow: hidden;
+}
+
+.back-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.back-btn:hover::before {
+  left: 100%;
 }
 
 @keyframes back-btn-fade-in {
@@ -621,7 +787,7 @@ export default {
 }
 
 .back-btn:hover {
-  background: rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.4);
   transform: translateX(2px);
 }
 
@@ -738,8 +904,8 @@ export default {
 
 .hamburger-icon {
   width: 20px;
-  height: 2px;
-  background: #e0e0e0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
   position: relative;
   transition: all 0.3s ease;
 }
@@ -749,8 +915,8 @@ export default {
   content: '';
   position: absolute;
   width: 20px;
-  height: 2px;
-  background: #e0e0e0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
   transition: all 0.3s ease;
 }
 
@@ -765,8 +931,8 @@ export default {
 /* 关闭按钮 */
 .close-icon {
   width: 20px;
-  height: 2px;
-  background: #e0e0e0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
   position: relative;
   transform: rotate(45deg);
   transition: all 0.3s ease;
@@ -776,8 +942,8 @@ export default {
   content: '';
   position: absolute;
   width: 20px;
-  height: 2px;
-  background: #e0e0e0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
   transform: rotate(-90deg);
   transition: all 0.3s ease;
 }
@@ -820,8 +986,8 @@ export default {
   width: 85%;
   max-width: 320px;
   height: 100%;
-  background: #1a1a1a;
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+  background: #0a0a0a;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
   animation: drawer-slide-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   display: flex;
   flex-direction: column;
@@ -830,7 +996,7 @@ export default {
 /* 抽屉头部 */
 .drawer-header {
   padding: 2rem 1.5rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -853,13 +1019,14 @@ export default {
   height: 50px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #4fc3f7;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .drawer-username {
-  color: #e0e0e0;
-  font-weight: 500;
-  font-size: 1.1rem;
+  color: #f0f0f0;
+  font-weight: 300;
+  letter-spacing: 1px;
+  font-size: 1rem;
 }
 
 /* 抽屉导航菜单 */
@@ -872,38 +1039,49 @@ export default {
 }
 
 .drawer-nav-link {
-  color: rgba(220, 220, 220, 0.9);
+  color: rgba(240, 240, 240, 0.8);
   text-decoration: none;
-  font-weight: 500;
-  font-size: 1.2rem;
+  font-weight: 300;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   padding: 12px 16px;
-  border-radius: 8px;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
 }
 
+.drawer-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  transition: width 0.3s ease;
+}
+
 .drawer-nav-link:hover {
-  background: rgba(79, 195, 247, 0.1);
-  color: #4fc3f7;
-  transform: translateX(8px);
+  color: #ffffff;
+}
+
+.drawer-nav-link:hover::after {
+  width: 100%;
 }
 
 .drawer-nav-link.router-link-active {
-  background: rgba(79, 195, 247, 0.15);
-  color: #4fc3f7 !important;
-  font-weight: 600;
+  color: #ffffff !important;
+  font-weight: 400;
 }
 
-.drawer-nav-link.router-link-active::before {
+.drawer-nav-link.router-link-active::after {
   content: '';
   position: absolute;
   left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 60%;
-  background: #4fc3f7;
-  border-radius: 0 2px 2px 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
 }
 
 /* 动画效果 */

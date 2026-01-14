@@ -175,6 +175,7 @@ export default {
   max-width: 1400px;
   padding: 16px 0;
   box-sizing: border-box;
+  background: black;
 }
 
 /* PC宽屏优化 */

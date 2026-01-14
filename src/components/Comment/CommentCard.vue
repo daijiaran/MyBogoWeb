@@ -306,51 +306,152 @@ const handleSubmitComment = async () => {
 </template>
 
 <style scoped>
+
+
+/* 基础样式 - 暗黑金属线条风格 */
+.comment-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  padding: 20px 16px;
+  margin-bottom: 16px;
+  background-color: #0a0a0a;
+  transition: all 0.3s ease;
+  box-shadow: none;
+}
+
+.comment-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(20, 20, 20, 0.5);
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+  margin-right: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  object-fit: cover;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.username {
+  text-align: left;
+  font-weight: 300;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.date {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 300;
+  letter-spacing: 0.3px;
+}
+
+.comment-content {
+  text-align: left;
+  margin-bottom: 12px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
+  padding: 0;
+}
+
 /* 按钮容器样式 - 实现居中+靠右 */
 .comment-actions {
   display: flex;
   width: 100%;
   align-items: center;
   margin-bottom: 16px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* 查看回复按钮 - 居中显示 */
 .reply-btn {
-  background: none;
-  border: none;
-  color: #4fc3f7;
+  background: transparent;
+  border: 1px solid rgba(79, 195, 247, 0.5);
+  color: rgba(79, 195, 247, 0.9);
   cursor: pointer;
-  padding: 4px 12px;
-  font-size: 14px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.reply-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.reply-btn:hover::before {
+  left: 100%;
 }
 
 .reply-btn:hover {
-  text-decoration: underline;
+  border-color: rgba(79, 195, 247, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(79, 195, 247, 0.3);
 }
 
 /* 回复按钮 - 靠卡片最右边 */
 .reply-button {
-  background: none;
-  border: none;
-  color: #999;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  padding: 4px 12px;
-  font-size: 14px;
+  padding: 6px 16px;
+  font-size: 12px;
   margin-left: auto;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 0;
 }
 
 .reply-button:hover {
-  color: #4fc3f7;
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
 }
 
 /* 评论输入栏主体 */
 .reply-input {
-  background-color: rgba(30, 30, 30, 0.8);
+  background-color: rgba(20, 20, 20, 0.9);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(100, 100, 100, 0.3);
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
   flex-direction: column;
   gap: 10px;
   padding: 14px 16px;
@@ -373,12 +474,12 @@ const handleSubmitComment = async () => {
   min-height: 56px;
   max-height: 150px;
   padding: 12px 14px;
-  border: 1px solid rgba(100, 100, 100, 0.5);
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #e0e0e0;
-  background-color: rgba(45, 45, 45, 0.8);
+  color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(20, 20, 20, 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   resize: none;
@@ -386,18 +487,21 @@ const handleSubmitComment = async () => {
   box-sizing: border-box;
   transition: all 0.2s ease;
   overflow-y: hidden;
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 .comment-textarea:focus {
   outline: none;
-  border-color: #4fc3f7;
-  box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
-  background-color: rgba(45, 45, 45, 0.95);
+  border-color: rgba(79, 195, 247, 0.5);
+  box-shadow: 0 0 0 1px rgba(79, 195, 247, 0.3);
+  background-color: rgba(20, 20, 20, 0.9);
 }
 
 .comment-textarea::placeholder {
-  color: #888;
+  color: rgba(255, 255, 255, 0.4);
   font-size: 13px;
+  font-weight: 300;
 }
 
 /* 底部信息栏 */
@@ -411,58 +515,128 @@ const handleSubmitComment = async () => {
 }
 
 .char-count {
-  color: #999;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 .shortcut-tip {
-  color: #888;
+  color: rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   gap: 4px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 .shortcut-tip::before {
   content: '';
   width: 4px;
   height: 4px;
-  border-radius: 50%;
-  background-color: #999;
+  border-radius: 0;
+  background-color: rgba(255, 255, 255, 0.5);
 }
 
-/* 发送按钮 */
+/* 发送按钮 - 金属风格 */
 .submit-btn {
   padding: 8px 20px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
+  background: transparent;
+  color: rgba(79, 195, 247, 0.9);
+  border: 1px solid rgba(79, 195, 247, 0.5);
+  border-radius: 0;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 300;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  box-shadow: none;
   flex-shrink: 0;
   white-space: nowrap;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.submit-btn:hover::before {
+  left: 100%;
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-color: rgba(79, 195, 247, 0.8);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 8px rgba(79, 195, 247, 0.3);
 }
 
 .submit-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
+  box-shadow: none;
 }
 
 .submit-btn:disabled {
-  background: #2d2d2d;
-  color: #666;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.1);
   cursor: not-allowed;
-  opacity: 0.9;
-  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* 新增加载状态样式 */
+.avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+  margin-right: 12px;
+  background-color: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-color: #1a1a1a;
+  }
+  50% {
+    background-color: #252525;
+  }
+  100% {
+    background-color: #1a1a1a;
+  }
+}
+
+/* 用于子评论区域的动画容器 */
+:deep(.comment-son-section .comments-list) {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: gap 0.3s ease;
+}
+
+:deep(.comment-son-section .new-comment) {
+  opacity: 0;
+  transform: translateY(-20px);
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+:deep(.comment-son-section .existing-comment) {
+  transition: transform 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 响应式优化 */
@@ -478,6 +652,51 @@ const handleSubmitComment = async () => {
 }
 
 @media (max-width: 768px) {
+  .comment-card {
+    padding: 16px 12px;
+    margin-bottom: 12px;
+    border-radius: 0;
+  }
+
+  .comment-header {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+  }
+
+  .username {
+    font-size: 13px;
+  }
+
+  .date {
+    font-size: 10px;
+  }
+
+  .comment-content {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .comment-actions {
+    margin-bottom: 12px;
+    padding-top: 6px;
+  }
+
+  .reply-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  .reply-button {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
   .reply-input-container {
     min-width: 100%;
     right: 0;
@@ -507,6 +726,49 @@ const handleSubmitComment = async () => {
 }
 
 @media (max-width: 480px) {
+  .comment-card {
+    padding: 14px 10px;
+    margin-bottom: 10px;
+  }
+
+  .comment-header {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+  }
+
+  .username {
+    font-size: 12px;
+  }
+
+  .date {
+    font-size: 9px;
+  }
+
+  .comment-content {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .comment-actions {
+    margin-bottom: 10px;
+  }
+
+  .reply-btn {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+
+  .reply-button {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+
   .reply-input-content {
     flex-direction: column;
     align-items: stretch;
@@ -524,100 +786,6 @@ const handleSubmitComment = async () => {
 
   .other-card {
     padding-bottom: 160px !important;
-  }
-}
-
-/* 基础样式 */
-.comment-card {
-  border: 1px solid #555;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  background-color: #1e1e1e;
-  transition: all 0.3s ease; /* 确保支持过渡动画 */
-}
-
-/* 用于子评论区域的动画容器 */
-:deep(.comment-son-section .comments-list) {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: gap 0.3s ease;
-}
-
-:deep(.comment-son-section .new-comment) {
-  opacity: 0;
-  transform: translateY(-20px);
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-:deep(.comment-son-section .existing-comment) {
-  transition: transform 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.comment-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 12px;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.username {
-  text-align: left;
-  font-weight: bold;
-  margin-bottom: 4px;
-  color: #e0e0e0;
-}
-
-.date {
-  font-size: 12px;
-  color: #999;
-}
-
-.comment-content {
-  text-align: left;
-  margin-bottom: 12px;
-  line-height: 1.6;
-  color: #e0e0e0;
-}
-
-/* 新增加载状态样式 */
-.avatar-placeholder {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 12px;
-  background-color: #2d2d2d;
-  animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-  0% {
-    background-color: #2d2d2d;
-  }
-  50% {
-    background-color: #3a3a3a;
-  }
-  100% {
-    background-color: #2d2d2d;
   }
 }
 </style>

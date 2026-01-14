@@ -133,33 +133,38 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-
-
-
+/* 基础样式 - 暗黑金属线条风格 */
 .comment-section {
   width: 100%;
   box-sizing: border-box;
+  background-color: #0a0a0a;
 }
 
 .comment-section h3 {
   margin: 0 0 20px 0;
-  font-size: 20px;
-  font-weight: bold;
-  color: #e0e0e0;
+  font-size: 18px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
 }
 
 .loading, .no-comments {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 .comments-list {
   display: flex;
   flex-direction: column;
-  gap: 16px; /* 评论间距 */
-  transition: gap 0.3s ease; /* 间距变化动画 */
+  gap: 16px;
+  transition: gap 0.3s ease;
 }
 
 /* 现有评论的下移动画 */
@@ -170,7 +175,7 @@ onUnmounted(() => {
 /* 新评论的渐显动画 */
 .new-comment {
   opacity: 0;
-  transform: translateY(-20px); /* 从上方进入 */
+  transform: translateY(-20px);
   animation: fadeIn 0.5s ease-out forwards;
 }
 
@@ -178,6 +183,41 @@ onUnmounted(() => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .comment-section h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+  }
+
+  .loading, .no-comments {
+    padding: 30px 15px;
+    font-size: 13px;
+  }
+
+  .comments-list {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .comment-section h3 {
+    font-size: 15px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+  }
+
+  .loading, .no-comments {
+    padding: 25px 12px;
+    font-size: 12px;
+  }
+
+  .comments-list {
+    gap: 10px;
   }
 }
 </style>

@@ -602,15 +602,20 @@ export default {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  background-color: #0a0a0a;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 .manage-container {
   width: 100%;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0);
+  background-color: #0a0a0a;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .split-layout {
@@ -619,45 +624,46 @@ export default {
   overflow: hidden;
   height: 100%;
   position: relative;
-  background: rgb(0, 0, 0);
+  background: #0a0a0a;
 }
 
 .sidebar {
-  background: linear-gradient(to bottom, rgba(30, 30, 30, 0), rgba(20, 20, 20, 0));
+  background: #0a0a0a;
   display: flex;
   flex-direction: column;
   height: 95vh;
   overflow: hidden;
   transition: width 0.3ms ease;
-  border-left: 1px solid rgba(165, 165, 165, 0.44); /* 改为左边框 */
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 25px;
-  position: absolute; /* 改为绝对定位 */
+  position: absolute;
   overflow-y: auto;
   z-index: 10;
-  border-radius: 40px;
+  border-radius: 0;
 }
 
 /* 侧边栏滚动条样式 */
 .sidebar::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .sidebar::-webkit-scrollbar-track {
-  background: rgb(234, 234, 234);
+  background: rgba(10, 10, 10, 0.5);
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: rgb(100, 100, 100);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0;
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(150, 150, 150, 0);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .article-container {
   padding: 0 16px 16px;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .article-header {
@@ -666,8 +672,27 @@ export default {
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  background: black;
-  border-bottom: 1px solid rgba(220, 220, 220, 0);
+  background: #0a0a0a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.list-title {
+  font-size: 18px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.list-count {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(20, 20, 20, 0.5);
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  font-weight: 300;
+  letter-spacing: 0.5px;
 }
 
 .search-and-create {
@@ -675,6 +700,42 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 金属风格按钮 */
+.create-btn {
+  background: transparent !important;
+  border: 1px solid rgba(79, 195, 247, 0.5) !important;
+  color: rgba(79, 195, 247, 0.9) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+  border-radius: 0 !important;
+  padding: 6px 16px !important;
+}
+
+.create-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.create-btn:hover::before {
+  left: 100%;
+}
+
+.create-btn:hover {
+  border-color: rgba(79, 195, 247, 0.8) !important;
+  box-shadow: 0 0 15px rgba(79, 195, 247, 0.3) !important;
 }
 
 /* 移动端隐藏类 */
@@ -747,29 +808,57 @@ export default {
   flex-shrink: 0;
 }
 
+/* 输入框样式 */
+::v-deep .el-input__wrapper {
+  background-color: rgba(20, 20, 20, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transition: all 0.3s ease !important;
+}
+
+::v-deep .el-input__wrapper:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+::v-deep .el-input__wrapper.is-focus {
+  border-color: rgba(79, 195, 247, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(79, 195, 247, 0.3) !important;
+}
+
+::v-deep .el-input__inner {
+  color: rgba(255, 255, 255, 0.9) !important;
+  background-color: transparent !important;
+  font-weight: 300 !important;
+}
+
+::v-deep .el-input__inner::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
 .article-list {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
-  background-color: rgba(20, 20, 20, 0.3);
+  background-color: rgba(10, 10, 10, 0.5);
 }
 
 /* 文章列表滚动条样式 */
 .article-list::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .article-list::-webkit-scrollbar-track {
-  background: rgba(20, 20, 20, 0.5);
+  background: rgba(10, 10, 10, 0.5);
 }
 
 .article-list::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.5);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0;
 }
 
 .article-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(150, 150, 150, 0.7);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .list-header {
@@ -805,13 +894,14 @@ export default {
 .article-card {
   display: flex;
   align-items: center;
-  background: rgba(45, 45, 45, 0.6);
-  border-radius: 8px;
+  background: rgba(20, 20, 20, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
   padding: 12px;
   margin: 0;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
   position: relative;
   overflow: hidden;
 }
@@ -819,7 +909,7 @@ export default {
 .article-card::before {
   content: '';
   position: absolute;
-  right: 0; /* 改为右侧边框 */
+  right: 0;
   top: 0;
   height: 100%;
   width: 3px;
@@ -830,25 +920,27 @@ export default {
 .article-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  background: rgba(60, 60, 60, 0.8);
+  background: rgba(30, 30, 30, 0.7);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .article-card.active {
-  border-color: #4fc3f7;
-  background-color: rgba(79, 195, 247, 0.15);
+  border-color: rgba(79, 195, 247, 0.5);
+  background-color: rgba(79, 195, 247, 0.1);
 }
 
 .article-card.active::before {
-  background-color: #4fc3f7;
+  background-color: rgba(79, 195, 247, 0.8);
 }
 
 .article-cover {
   width: 56px;
   height: 40px;
-  border-radius: 4px;
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
   margin-right: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .cover-img {
@@ -871,18 +963,19 @@ export default {
 .article-title {
   display: block;
   font-size: 14px;
-  color: #e0e0e0;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 300;
   line-height: 1.4;
   margin-bottom: 4px;
   transition: color 0.2s;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.3px;
 }
 
 .article-card:hover .article-title {
-  color: #4fc3f7;
+  color: rgba(79, 195, 247, 0.9);
 }
 
 .article-meta {
@@ -899,8 +992,10 @@ export default {
 
 .article-date {
   font-size: 12px;
-  color: #999;
+  color: rgba(255, 255, 255, 0.5);
   white-space: nowrap;
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 .article-actions {
@@ -915,6 +1010,7 @@ export default {
   opacity: 1 !important;
 }
 
+/* 金属风格删除按钮 */
 ::v-deep(.article-actions .el-button) {
   padding: 0 6px !important;
   width: 28px !important;
@@ -922,18 +1018,38 @@ export default {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
+  background: transparent !important;
+  border: 1px solid rgba(255, 107, 107, 0.5) !important;
+  color: rgba(255, 107, 107, 0.8) !important;
+  border-radius: 0 !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
 }
 
-::v-deep(.article-actions .el-button .el-icon) {
+::v-deep(.article-actions .el-button)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 107, 107, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+::v-deep(.article-actions .el-button:hover)::before {
+  left: 100%;
+}
+
+::v-deep(.article-actions .el-button:hover) {
+  border-color: rgba(255, 107, 107, 0.8) !important;
+  color: rgba(255, 107, 107, 1) !important;
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.3) !important;
+}
+
+::v-deep(.article-actions .el-icon) {
   font-size: 16px !important;
-}
-
-::v-deep(.article-actions .delete-btn) {
-  color: #ff0000 !important;
-}
-
-::v-deep(.article-actions .delete-btn:hover) {
-  background-color: #fb7260 !important;
 }
 
 .empty-state {
@@ -942,44 +1058,50 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 40px 0;
-  color: #999;
-  background-color: rgba(45, 45, 45, 0.6);
-  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(20, 20, 20, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
   margin-top: 20px;
 }
 
 .empty-icon {
   font-size: 48px;
   margin-bottom: 16px;
-  color: #666;
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .empty-text {
   margin-bottom: 16px;
   font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 /* 分隔线调整到右侧 */
 .divider {
-  width: 6px;
-  background: rgba(100, 100, 100, 0.3);
+  width: 4px;
+  background: rgba(255, 255, 255, 0.1);
   cursor: col-resize;
-  transition: background 0s, right 0s ease;
+  transition: all 0.2s ease;
   user-select: none;
   z-index: 20;
   position: absolute;
   top: 0;
+  border-radius: 0;
 }
 
 .divider:hover {
-  background: rgba(150, 150, 150, 0.6);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .load-more {
   text-align: center;
   padding: 16px;
-  color: #999;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 /* 编辑区调整到左侧 */
@@ -989,14 +1111,13 @@ export default {
   left: 0;
   bottom: 0;
   right: 326px; /* 默认宽度+分隔线宽度 */
-  /* 从浅灰透明到深灰透明的垂直渐变，柔和不刺眼 */
-  background: linear-gradient(to bottom, rgba(20, 20, 20, 0.8), rgba(15, 15, 15, 0.95));
+  background: #0a0a0a;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   transition: right 0s ease;
-  border-radius: 40px;
-
+  border-radius: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .editor-area::-webkit-scrollbar {
@@ -1009,9 +1130,11 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 16px;
-  background-color: rgba(30, 30, 30, 0.5);
+  background-color: rgba(20, 20, 20, 0.5);
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 /* 保留编辑器容器基础样式，具体编辑样式在 ReleaseComponent 中 */
@@ -1019,31 +1142,32 @@ export default {
   position: absolute;
   width: 15px;
   height: 40px;
-  background-color: rgba(45, 45, 45, 0.8);
-  border: 1px solid #555;
-  border-radius: 4px;
+  background-color: rgba(20, 20, 20, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: none;
   z-index: 1000;
-  transition: right 0s ease;
-  color: #e0e0e0;
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .toggle-btn i {
   font-size: 18px;
-  color: #e0e0e0;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .toggle-btn:hover {
-  background-color: rgba(60, 60, 60, 0.9);
-  border-color: #4fc3f7;
+  background-color: rgba(30, 30, 30, 0.9);
+  border-color: rgba(79, 195, 247, 0.5);
+  box-shadow: 0 0 10px rgba(79, 195, 247, 0.2);
 }
 
 .toggle-btn:hover i {
-  color: #4fc3f7;
+  color: rgba(79, 195, 247, 0.9);
 }
 
 /* 移动端样式 */
@@ -1054,15 +1178,42 @@ export default {
     top: 85px;       /* 距离顶部15px */
     right: 35px;     /* 距离右边15px */
     z-index: 9999;   /* 确保悬浮在最上层 */
-    border-radius: 4px;
-    color: #ffffff;
+    border-radius: 0;
+    color: rgba(255, 255, 255, 0.9);
   }
 
-  /* 按钮内部样式可保持原样 */
+  /* 金属风格移动端按钮 */
   .footer-btn.submit-btn {
-    background-color: #4fc3f7;
-    border-color: #4fc3f7;
-    color: #fff;
+    background: transparent !important;
+    border: 1px solid rgba(79, 195, 247, 0.5) !important;
+    color: rgba(79, 195, 247, 0.9) !important;
+    font-weight: 300 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease !important;
+    border-radius: 0 !important;
+  }
+
+  .footer-btn.submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.3), transparent);
+    transition: left 0.5s;
+  }
+
+  .footer-btn.submit-btn:hover::before {
+    left: 100%;
+  }
+
+  .footer-btn.submit-btn:hover {
+    border-color: rgba(79, 195, 247, 0.8) !important;
+    box-shadow: 0 0 15px rgba(79, 195, 247, 0.3) !important;
   }
 
   .articles-grid {

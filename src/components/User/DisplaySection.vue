@@ -152,9 +152,11 @@ onBeforeUnmount(stopAuto)
   width: 100%;
   height: 60vh;
   overflow: hidden;
-  border-radius: 10px;
+  background-color: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: background-color 0.8s ease;
   will-change: background-color;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
 .carousel-img {
@@ -166,6 +168,7 @@ onBeforeUnmount(stopAuto)
   width: auto;
   object-fit: contain;
   will-change: opacity, transform;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .fade-enter-active, .fade-leave-active {
@@ -180,9 +183,28 @@ onBeforeUnmount(stopAuto)
   position: absolute;
   top: 60px;
   left: 20px;
-  color: #e0e0e0;
+  color: rgba(255, 255, 255, 0.9);
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
   z-index: 2;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+.text-overlay h1 {
+  font-size: 2.5rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 10px;
+}
+
+.text-overlay p {
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .status {
@@ -191,11 +213,14 @@ onBeforeUnmount(stopAuto)
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.5px;
 }
 
 .status.error {
-  color: #ff6b6b;
+  color: rgba(255, 107, 107, 0.8);
 }
 
 .indicators {
@@ -205,20 +230,49 @@ onBeforeUnmount(stopAuto)
   transform: translateX(-50%);
   display: flex;
   gap: 10px;
+  padding: 10px 20px;
+  background-color: rgba(10, 10, 10, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
 }
 
 .dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: rgba(150, 150, 150, 0.5);
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.dot::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.dot:hover::before {
+  left: 100%;
 }
 
 .dot.active {
   width: 28px;
   border-radius: 6px;
-  background: #4fc3f7;
+  background: rgba(79, 195, 247, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+}
+
+.dot.active::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
 }
 </style>

@@ -1,62 +1,81 @@
 <template>
   <div class="home-root" @scroll.passive="onScroll">
-    <canvas ref="bgCanvas" class="bg-canvas"></canvas>
-    <div class="bg-overlay"></div>
+    <!-- 纯基底背景 -->
+    <div class="bg-base"></div>
+    
+    <!-- 金属泛光背景层 -->
+    <div class="metal-glow-container" ref="glowContainer">
+      <div class="metal-glow"></div>
+    </div>
+    
+    <!-- 白色线条装饰 -->
+    <div class="lines-container">
+      <div class="line line-1"></div>
+      <div class="line line-2"></div>
+      <div class="line line-3"></div>
+      <div class="line line-4"></div>
+    </div>
 
-    <!-- Hero -->
-    <main class="hero" @mousemove="onPointerMove" @touchmove="onTouchMove">
-      <h1 class="hero-title" ref="titleRef">DigitalMaker</h1>
-      <p class="hero-sub">
-        Unity3D / UE5 项目外包 · 宣传视频高转化定制
-      </p>
-      <div class="hero-cta"></div>
+    <!-- Hero 区域 -->
+    <main class="hero">
+      <div class="hero-content">
+        <div class="hero-title-container">
+          <h1 class="hero-title" ref="titleRef">DigitalMaker</h1>
+          <div class="title-line"></div>
+        </div>
+        <p class="hero-sub">
+          Unity3D / UE5 项目外包 · 宣传视频高转化定制
+        </p>
+        <div class="hero-cta">
+          <button class="cta-metal" @click="contact">联系我们</button>
+        </div>
+      </div>
     </main>
 
-<!--    &lt;!&ndash; 服务卡片 &ndash;&gt;-->
-<!--    <section class="services">-->
-<!--      <article class="card" v-parallax>-->
-<!--        <h3 style="color: white;">Unity / UE 开发外包</h3>-->
-<!--        <p>-->
-<!--          500+ 项目经验 · 专业团队全流程承接 · AR/VR/仿真/游戏开发外包 ·-->
-<!--          满意再付款-->
-<!--        </p>-->
-<!--        <div class="card-actions">-->
-<!--          <button class="btn neon">查看案例</button>-->
-<!--        </div>-->
-<!--      </article>-->
-
-<!--      <article class="card" v-parallax>-->
-<!--        <h3 style="color: white;">宣传视频制作</h3>-->
-<!--        <p>-->
-<!--          Minecraft / 游戏服务器宣传 · 平均播放 4000+ · 新服推广首选 ·-->
-<!--          转化率高 · 价格灵活-->
-<!--        </p>-->
-<!--        <div class="card-actions">-->
-<!--          <button class="btn neon alt">了解更多</button>-->
-<!--        </div>-->
-<!--      </article>-->
-<!--    </section>-->
-
-    <!-- 实力展示 -->
-    <section class="stats">
-      <div class="stat">
-        <div class="stat-num" ref="num1">0</div>
-        <div class="stat-label">完成项目</div>
+    <!-- 服务区域 -->
+    <section class="services">
+      <div class="service-item">
+        <div class="service-line"></div>
+        <h3>专业开发</h3>
+        <p>Unity/UE5 全流程开发</p>
       </div>
-      <div class="stat">
-        <div class="stat-num" ref="num2">0</div>
-        <div class="stat-label">客户满意度</div>
+      <div class="service-item">
+        <div class="service-line"></div>
+        <h3>视频定制</h3>
+        <p>高转化宣传视频制作</p>
       </div>
-      <div class="stat">
-        <div class="stat-num" ref="num3">0</div>
-        <div class="stat-label">满意后付款</div>
+      <div class="service-item">
+        <div class="service-line"></div>
+        <h3>满意付款</h3>
+        <p>先验收后付款保障</p>
       </div>
     </section>
 
+    <!-- 数据展示 -->
+    <section class="stats">
+      <div class="stat-item">
+        <div class="stat-number" ref="num1">0</div>
+        <div class="stat-line"></div>
+        <div class="stat-label">完成项目</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" ref="num2">0</div>
+        <div class="stat-line"></div>
+        <div class="stat-label">客户满意度</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" ref="num3">0</div>
+        <div class="stat-line"></div>
+        <div class="stat-label">合作保障</div>
+      </div>
+    </section>
+
+    <!-- 底部区域 -->
     <footer class="footer">
-      <div>想了解项目报价或合作细节？立即联系我们！</div>
-      <div class="contact-btns">
-        <button class="btn contact">微信 / QQ / 邮箱咨询</button>
+      <div class="footer-line"></div>
+      <div class="footer-content">
+        <p>专业团队 · 高质量交付</p>
+        <button class="footer-btn" @click="contact">联系我们</button>
       </div>
     </footer>
   </div>
@@ -65,49 +84,26 @@
 <script>
 export default {
   name: "HomeView",
-  directives: {
-    parallax: {
-      mounted(el) {
-        // ⭐ 移动端禁用，提高性能
-        if (window.innerWidth <= 768) return;
-
-        el.addEventListener("mousemove", (e) => {
-          const r = el.getBoundingClientRect();
-          const cx = r.left + r.width / 2;
-          const cy = r.top + r.height / 2;
-          const dx = (e.clientX - cx) / r.width;
-          const dy = (e.clientY - cy) / r.height;
-          el.style.transform = `translate(${dx * 8}px, ${dy * 8}px) scale(1.02)`;
-        });
-        el.addEventListener("mouseleave", () => {
-          el.style.transform = "translate(0,0) scale(1)";
-        });
-      },
-    },
-  },
   data() {
     return {
-      pointer: { x: 0, y: 0 },
       scrollY: 0,
+      mouseX: 0,
+      mouseY: 0,
+      lastUpdateTime: 0,
     };
   },
   mounted() {
-    this.initCanvas();
     this.startCountUp();
-
-    // ⭐ PC 才启用 title 位移
-    if (window.innerWidth > 768) {
-      window.addEventListener("mousemove", this.onWindowMove);
-    }
-
     window.addEventListener("resize", this.onResize);
     window.addEventListener("scroll", this.onScroll);
+    window.addEventListener("mousemove", this.onMouseMove);
+    this.initAnimations();
   },
   beforeUnmount() {
-    window.removeEventListener("mousemove", this.onWindowMove);
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("scroll", this.onScroll);
-    cancelAnimationFrame(this.bgRAF);
+    window.removeEventListener("mousemove", this.onMouseMove);
+    cancelAnimationFrame(this.animationFrameId);
   },
   methods: {
     contact() {
@@ -117,106 +113,51 @@ export default {
       alert("跳转到作品页面或展示模态");
     },
 
-    onPointerMove(e) {
-      this.pointer.x = e.clientX;
-      this.pointer.y = e.clientY;
-    },
-    onTouchMove(e) {
-      const t = e.touches[0];
-      this.pointer.x = t.clientX;
-      this.pointer.y = t.clientY;
-    },
-
     onScroll() {
       this.scrollY = window.scrollY || document.documentElement.scrollTop;
     },
 
-    onWindowMove(e) {
-      const title = this.$refs.titleRef;
-      if (!title) return;
-      const cx = window.innerWidth / 2;
-      const dx = (e.clientX - cx) / cx;
-      title.style.transform = `translateX(${dx * 8}px) translateZ(0)`;
+    onMouseMove(e) {
+      const now = Date.now();
+      if (now - this.lastUpdateTime < 16) return;
+      this.lastUpdateTime = now;
+      
+      this.mouseX = e.clientX;
+      this.mouseY = e.clientY;
+      
+      this.updateGlowPosition();
     },
 
-    onResize() {
-      if (!this.canvas) return;
-      this.canvas.width = window.innerWidth;
-      this.canvas.height = window.innerHeight;
+    updateGlowPosition() {
+      if (!this.$refs.glowContainer) return;
+      
+      const glow = this.$refs.glowContainer.querySelector('.metal-glow');
+      if (!glow) return;
+      
+      const x = (this.mouseX / window.innerWidth) * 100;
+      const y = (this.mouseY / window.innerHeight) * 100;
+      
+      glow.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(255, 255, 255, 0.2) 0%, rgba(200, 220, 255, 0.1) 30%, transparent 60%)`;
+      glow.style.transform = `translate(${(x - 50) * 0.8}px, ${(y - 50) * 0.8}px)`;
     },
 
-    /* =============== 背景 Canvas =============== */
-    initCanvas() {
-      this.canvas = this.$refs.bgCanvas;
-      this.ctx = this.canvas.getContext("2d");
-      this.canvas.width = window.innerWidth * 0.9; // ⭐ 降低分辨率提升性能
-      this.canvas.height = window.innerHeight * 0.9;
-
-      // ⭐ 移动端粒子减少，性能提升
-      const blobCount = window.innerWidth < 768 ? 6 : 12;
-
-      const colors = [
-        { h: 200, s: 90, l: 60 },
-        { h: 270, s: 85, l: 60 },
-        { h: 320, s: 85, l: 60 },
-        { h: 150, s: 80, l: 55 },
-      ];
-
-      this.blobs = [];
-      for (let i = 0; i < blobCount; i++) {
-        const c = colors[i % colors.length];
-        this.blobs.push({
-          x: Math.random() * innerWidth,
-          y: Math.random() * innerHeight,
-          vx: (Math.random() - 0.5) * 0.6,
-          vy: (Math.random() - 0.5) * 0.6,
-          r: 100 + Math.random() * 220,
-          color: c,
-          life: Math.random() * 1000,
+    /* =============== 动画初始化 =============== */
+    initAnimations() {
+      // 观察器用于元素进入视口时的动画
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-in');
+          }
         });
-      }
-
-      this.animate();
-    },
-
-    animate() {
-      const ctx = this.ctx;
-      const w = this.canvas.width;
-      const h = this.canvas.height;
-
-      ctx.clearRect(0, 0, w, h);
-      ctx.globalCompositeOperation = "lighter";
-
-      for (let i = 0; i < this.blobs.length; i++) {
-        const b = this.blobs[i];
-        b.x += b.vx * 1.5;
-        b.y += b.vy * 1.5;
-
-        const scrollEffect = this.scrollY * 0.001;
-        b.y += Math.sin(scrollEffect + i) * 0.6;
-
-        if (b.x < -b.r) b.x = w + b.r;
-        if (b.x > w + b.r) b.x = -b.r;
-        if (b.y < -b.r) b.y = h + b.r;
-        if (b.y > h + b.r) b.y = -b.r;
-
-        const hue = (b.color.h + b.life / 10) % 360;
-        const gradient = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        gradient.addColorStop(0, `hsla(${hue}, ${b.color.s}%, ${b.color.l}%, 0.3)`);
-        gradient.addColorStop(1, `hsla(${(hue + 40) % 360}, ${b.color.s}%, ${b.color.l}%, 0.05)`);
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        ctx.fill();
-        b.life += 1;
-      }
-
-      ctx.globalCompositeOperation = "overlay";
-      ctx.fillStyle = "rgba(10, 10, 20, 0.12)";
-      ctx.fillRect(0, 0, w, h);
-
-      this.bgRAF = requestAnimationFrame(() => this.animate());
+      }, { threshold: 0.1 });
+      
+      // 观察所有需要动画的元素
+      setTimeout(() => {
+        document.querySelectorAll('.service-item, .stat-item').forEach(el => {
+          observer.observe(el);
+        });
+      }, 100);
     },
 
     /* =============== 数字滚动 =============== */
@@ -241,123 +182,375 @@ export default {
 </script>
 
 <style scoped>
-/* ======= 主体视觉 ======= */
+/* ======= 基础样式 ======= */
 .home-root {
   position: relative;
   overflow-x: hidden;
-  font-family: "Inter", "Poppins", sans-serif;
-  color: #eaf0ff;
-  background: #050508;
+  font-family: "Helvetica Neue", "Arial", sans-serif;
+  color: #f0f0f0;
+  background: #0a0a0a;
   scroll-behavior: smooth;
 }
 
-/* ======= 背景效果 ======= */
-.bg-canvas {
+/* ======= 纯基底背景 ======= */
+.bg-base {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0a0a;
+  z-index: -1;
+}
+
+/* ======= 白色线条装饰 ======= */
+.lines-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.line {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.line-1 {
+  top: 15%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+}
+
+.line-2 {
+  top: 0;
+  left: 20%;
+  width: 1px;
+  height: 100%;
+}
+
+.line-3 {
+  top: 70%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+}
+
+.line-4 {
+  top: 0;
+  right: 30%;
+  width: 1px;
+  height: 100%;
+}
+
+/* ======= 金属泛光背景层 ======= */
+.metal-glow-container {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
-  filter: blur(20px) saturate(130%) brightness(1.1);
   pointer-events: none;
-}
-.bg-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  background: radial-gradient(circle at 30% 40%, rgba(60, 80, 200, 0.2), transparent 70%),
-  radial-gradient(circle at 70% 70%, rgba(220, 60, 180, 0.15), transparent 70%);
-  mix-blend-mode: overlay;
-  pointer-events: none;
+  overflow: hidden;
 }
 
-/* ======= Hero ======= */
+.metal-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  transition: background 0.15s ease-out, transform 0.15s ease-out;
+  filter: blur(80px);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0%, rgba(200, 220, 255, 0.1) 30%, transparent 60%);
+}
+
+/* ======= Hero 区域 ======= */
 .hero {
-  min-height: 80vh;
+  min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  z-index: 10;
-  text-align: center;
-  padding: 120px 20px 60px;
-}
-.hero-title {
-  font-size: clamp(48px, 7vw, 96px);
-  font-weight: 800;
-  background: linear-gradient(90deg, #8defff, #a78bfa, #ff77e0);
-  -webkit-background-clip: text;
-  color: transparent;
-  animation: floatTitle 6s ease-in-out infinite;
-}
-@keyframes floatTitle {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-.hero-sub {
-  margin-top: 18px;
-  font-size: 18px;
-  opacity: 0.85;
+  justify-content: center;
+  padding: 0 20px;
+  position: relative;
+  z-index: 2;
 }
 
-/* ======= 服务卡片 ======= */
+.hero-content {
+  text-align: center;
+  max-width: 800px;
+}
+
+.hero-title-container {
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.hero-title {
+  font-size: clamp(48px, 8vw, 120px);
+  font-weight: 100;
+  letter-spacing: -2px;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1;
+}
+
+.title-line {
+  width: 60px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  margin: 20px auto 0;
+}
+
+.hero-sub {
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin-bottom: 60px;
+  opacity: 0.7;
+  line-height: 1.6;
+}
+
+.hero-cta {
+  display: flex;
+  justify-content: center;
+}
+
+.cta-metal {
+  padding: 15px 40px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s ease;
+}
+
+.cta-metal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.cta-metal:hover::before {
+  left: 100%;
+}
+
+.cta-metal:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+/* ======= 服务区域 ======= */
 .services {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 32px;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 40px 20px;
-}
-.card {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
-  padding: 28px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
-  transition: all 0.3s ease;
-}
-.card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 50px rgba(100, 100, 255, 0.3);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 100px 0;
+  overflow: hidden;
 }
 
-/* ======= 实力展示 - 移动端适配 ======= */
+.service-item {
+  background: #0a0a0a;
+  padding: 60px 40px;
+  text-align: center;
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease;
+}
+
+.service-item.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.service-item:nth-child(1) { transition-delay: 0.1s; }
+.service-item:nth-child(2) { transition-delay: 0.2s; }
+.service-item:nth-child(3) { transition-delay: 0.3s; }
+
+.service-line {
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 auto 30px;
+}
+
+.service-item h3 {
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+  color: #ffffff;
+}
+
+.service-item p {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+/* ======= 数据展示区域 ======= */
 .stats {
-  margin: 60px auto;
-  display: flex;
-  justify-content: center;
-  gap: 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 0;
+  overflow: hidden;
 }
 
-/* ⭐ 移动端垂直展示，不挤压 */
-@media (max-width: 768px) {
-  .stats {
-    flex-direction: column;
-    align-items: center;
-    gap: 32px;
-  }
+.stat-item {
+  background: #0a0a0a;
+  padding: 60px 20px;
+  text-align: center;
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease;
 }
 
-.stat-num {
+.stat-item.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stat-item:nth-child(1) { transition-delay: 0.1s; }
+.stat-item:nth-child(2) { transition-delay: 0.2s; }
+.stat-item:nth-child(3) { transition-delay: 0.3s; }
+
+.stat-number {
   font-size: 64px;
-  font-weight: 800;
-  color: #eaf0ff;
-  text-shadow: 0 4px 20px rgba(60, 100, 200, 0.3);
+  font-weight: 100;
+  color: #ffffff;
+  margin-bottom: 20px;
+  letter-spacing: -2px;
 }
+
+.stat-line {
+  width: 30px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 auto 20px;
+}
+
 .stat-label {
   font-size: 14px;
-  opacity: 0.8;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.7;
 }
 
-/* ======= 底部 ======= */
+/* ======= 底部区域 ======= */
 .footer {
+  margin-top: 100px;
+  padding: 80px 20px;
   text-align: center;
-  margin-bottom: 100px;
-  color: rgba(220, 230, 255, 0.8);
+  position: relative;
 }
-.card-actions,
-.contact-btns {
-  color: #1d2129;
+
+.footer-line {
+  width: 100px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 auto 40px;
+}
+
+.footer-content p {
+  font-size: 16px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin-bottom: 40px;
+  opacity: 0.7;
+}
+
+.footer-btn {
+  padding: 15px 40px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s ease;
+}
+
+.footer-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.footer-btn:hover::before {
+  left: 100%;
+}
+
+.footer-btn:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+/* ======= 移动端适配 ======= */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: clamp(40px, 10vw, 70px);
+  }
+  
+  .hero-sub {
+    font-size: 16px;
+    margin-bottom: 40px;
+  }
+  
+  .services {
+    grid-template-columns: 1fr;
+  }
+  
+  .service-item {
+    padding: 40px 20px;
+  }
+  
+  .stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-item {
+    padding: 40px 20px;
+  }
+  
+  .stat-number {
+    font-size: 48px;
+  }
+  
+  .footer {
+    padding: 60px 20px;
+  }
 }
 </style>

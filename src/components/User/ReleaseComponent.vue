@@ -375,12 +375,309 @@ export default {
   height: 100%;
   position: relative;
   transition: transform 0.2s ease;
-  background-color: rgba(0, 0, 0, 0);
-  color: #ffffff;
+  background-color: #0a0a0a;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 .editor-container::-webkit-scrollbar { display: none; }
-.article-form { max-width: 800px; margin: 0 auto; }
-.form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.form-header h2 { color: #ffffff; }
-.form-header-actions { display: flex; gap: 10px; }
+.article-form { 
+  max-width: 800px; 
+  margin: 0 auto; 
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 4px;
+  background-color: rgba(10, 10, 10, 0.5);
+}
+.form-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 20px; 
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 15px;
+}
+.form-header h2 { 
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.form-header-actions { 
+  display: flex; 
+  gap: 10px; 
+}
+
+/* 金属风格按钮 */
+.form-header-actions .el-button {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+}
+
+.form-header-actions .el-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.form-header-actions .el-button:hover::before {
+  left: 100%;
+}
+
+.form-header-actions .el-button--primary {
+  border-color: rgba(79, 195, 247, 0.5) !important;
+  color: rgba(79, 195, 247, 0.9) !important;
+}
+
+.form-header-actions .el-button--primary::before {
+  background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.3), transparent);
+}
+
+.form-header-actions .el-button:hover {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1) !important;
+}
+
+.form-header-actions .el-button--primary:hover {
+  border-color: rgba(79, 195, 247, 0.8) !important;
+  box-shadow: 0 0 15px rgba(79, 195, 247, 0.3) !important;
+}
+
+/* 表单项样式 */
+::v-deep .el-form-item__label {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  font-size: 0.85rem !important;
+}
+
+::v-deep .el-input__wrapper {
+  background-color: rgba(20, 20, 20, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transition: all 0.3s ease !important;
+}
+
+::v-deep .el-input__wrapper:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+::v-deep .el-input__wrapper.is-focus {
+  border-color: rgba(79, 195, 247, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(79, 195, 247, 0.3) !important;
+}
+
+::v-deep .el-input__inner {
+  color: rgba(255, 255, 255, 0.9) !important;
+  background-color: transparent !important;
+  font-weight: 300 !important;
+}
+
+::v-deep .el-textarea__inner {
+  background-color: rgba(20, 20, 20, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 300 !important;
+  transition: all 0.3s ease !important;
+}
+
+::v-deep .el-textarea__inner:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+::v-deep .el-textarea__inner:focus {
+  border-color: rgba(79, 195, 247, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(79, 195, 247, 0.3) !important;
+}
+
+/* 选择器样式 */
+::v-deep .el-select .el-input__wrapper {
+  background-color: rgba(20, 20, 20, 0.5) !important;
+}
+
+::v-deep .el-select-dropdown {
+  background-color: #0a0a0a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+::v-deep .el-select-dropdown__item {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 300 !important;
+}
+
+::v-deep .el-select-dropdown__item:hover {
+  background-color: rgba(79, 195, 247, 0.1) !important;
+  color: rgba(79, 195, 247, 0.9) !important;
+}
+
+::v-deep .el-select-dropdown__item.selected {
+  background-color: rgba(79, 195, 247, 0.2) !important;
+  color: rgba(79, 195, 247, 0.9) !important;
+  font-weight: 400 !important;
+}
+
+/* 上传组件样式 */
+.avatar-uploader {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+  background-color: rgba(20, 20, 20, 0.5) !important;
+  transition: all 0.3s ease !important;
+}
+
+.avatar-uploader:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.upload-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-weight: 300 !important;
+}
+
+.upload-tip {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 0.8rem !important;
+  margin-top: 5px !important;
+}
+
+.delete-cover {
+  color: rgba(255, 107, 107, 0.8) !important;
+  font-weight: 300 !important;
+  margin-top: 5px !important;
+}
+
+.delete-cover:hover {
+  color: rgba(255, 107, 107, 1) !important;
+}
+
+/* 分类选择器响应式样式 */
+.category-selector-responsive {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.create-category-btn {
+  background: transparent !important;
+  border: 1px solid rgba(79, 195, 247, 0.5) !important;
+  color: rgba(79, 195, 247, 0.9) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+}
+
+.create-category-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.create-category-btn:hover::before {
+  left: 100%;
+}
+
+.create-category-btn:hover {
+  border-color: rgba(79, 195, 247, 0.8) !important;
+  box-shadow: 0 0 15px rgba(79, 195, 247, 0.3) !important;
+}
+
+/* 对话框样式 */
+::v-deep .el-dialog {
+  background-color: #0a0a0a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7) !important;
+}
+
+::v-deep .el-dialog__header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+::v-deep .el-dialog__title {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+}
+
+::v-deep .el-dialog__footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.dialog-footer .el-button {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+}
+
+.dialog-footer .el-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.dialog-footer .el-button:hover::before {
+  left: 100%;
+}
+
+.dialog-footer .el-button--primary {
+  border-color: rgba(79, 195, 247, 0.5) !important;
+  color: rgba(79, 195, 247, 0.9) !important;
+}
+
+.dialog-footer .el-button--primary::before {
+  background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.3), transparent);
+}
+
+.dialog-footer .el-button:hover {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1) !important;
+}
+
+.dialog-footer .el-button--primary:hover {
+  border-color: rgba(79, 195, 247, 0.8) !important;
+  box-shadow: 0 0 15px rgba(79, 195, 247, 0.3) !important;
+}
+
+/* 编辑器样式 */
+.editor-css {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+  background-color: rgba(20, 20, 20, 0.5) !important;
+}
 </style>

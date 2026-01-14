@@ -17,7 +17,7 @@ import Navigationbar from "@/components/Nav/Navigationbar.vue";
 
 <style>
 .app-wrapper {
-  background-color: rgba(2, 2, 2, 0.95);
+  background-color: rgb(10, 10, 10);
   width: 100%;
   min-height: 100vh; /* 占满整个视口高度 */
   position: fixed; /* 固定在视口，不随滚动移动 */

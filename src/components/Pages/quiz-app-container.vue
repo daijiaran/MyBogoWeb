@@ -26,10 +26,13 @@
             <span class="score-highlight">{{ currentScore }}</span>/{{ currentTotal }}
           </div>
 
-          <template v-if="!isViewingWrongOnly && !isMobile">
+          <template v-if="!isMobile">
             <div v-if="currentQuiz.isSubmitted" class="divider"></div>
             <button v-if="!currentQuiz.isSubmitted" class="btn sm" @click="submitQuiz">提交</button>
-            <button v-else class="btn secondary sm" @click="resetCurrentQuiz">重做</button>
+            <template v-else>
+              <button v-if="!isViewingWrongOnly" class="btn secondary sm" @click="resetCurrentQuiz">重做</button>
+              <button v-if="isViewingWrongOnly" class="btn secondary sm" @click="resetWrongQuestions">重刷错题</button>
+            </template>
           </template>
         </div>
             
@@ -159,6 +162,7 @@
               <div class="q-header">
                 <span class="q-index">{{ q.meta || `题目 ${index + 1}` }}</span>
                 <span class="tag type">{{ getTypeLabel(q.type) }}</span>
+                <button v-if="isViewingWrongOnly && currentQuiz.isSubmitted" class="btn secondary sm remove-btn" @click.stop="removeFromWrongQuestions(q.id)">移除错题本</button>
               </div>
               <div class="q-content" v-html="q.content"></div>
 
@@ -169,7 +173,7 @@
                       :name="`q-${q.id}`"
                       :value="opt.label"
                       v-model="q.userAnswer"
-                      :disabled="currentQuiz.isSubmitted || isViewingWrongOnly"
+                      :disabled="currentQuiz.isSubmitted"
                       @change="handleOptionSelect(q, index)"
                   >
                   <span class="option-text"><b>{{ opt.label }}.</b> <span v-html="opt.html"></span></span>
@@ -182,7 +186,7 @@
                       type="checkbox"
                       :value="opt.label"
                       :checked="isCheckboxChecked(q, opt.label)"
-                      :disabled="currentQuiz.isSubmitted || isViewingWrongOnly"
+                      :disabled="currentQuiz.isSubmitted"
                       @change="(e) => { toggleCheckbox(q, opt.label, e.target.checked); handleOptionSelect(q, index); }"
                   >
                   <span class="option-text"><b>{{ opt.label }}.</b> <span v-html="opt.html"></span></span>
@@ -195,7 +199,7 @@
                     class="short-answer-input"
                     placeholder="请输入答案"
                     v-model="q.userAnswer"
-                    :disabled="currentQuiz.isSubmitted || isViewingWrongOnly"
+                    :disabled="currentQuiz.isSubmitted"
                     @input="saveHistory"
                     @focus="closeAllSidebars"
                 >
@@ -271,7 +275,10 @@
       </div>
       <div class="bottom-bar-right">
         <button v-if="currentQuizId && !currentQuiz.isSubmitted" class="btn sm" @click="submitQuiz">提交判卷</button>
-        <button v-else-if="currentQuizId && currentQuiz.isSubmitted" class="btn secondary sm" @click="resetCurrentQuiz">重做</button>
+        <template v-else-if="currentQuizId && currentQuiz.isSubmitted">
+          <button v-if="!isViewingWrongOnly" class="btn secondary sm" @click="resetCurrentQuiz">重做</button>
+          <button v-if="isViewingWrongOnly" class="btn secondary sm" @click="resetWrongQuestions">重刷错题</button>
+        </template>
       </div>
     </div>
 
@@ -318,6 +325,11 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { useUserStore } from '../../api/user';
+import { useRouter } from 'vue-router';
+
+const userStore = useUserStore();
+const router = useRouter();
 
 // === 常量与状态 ===
 const STORAGE_KEY = 'quiz_tool_history_v2';
@@ -331,6 +343,8 @@ const htmlInput = ref('');
 const parseError = ref('');
 const isCreating = ref(false);
 const isMobile = ref(false); // 新增：移动端状态检测
+const currentRetryWrongQuestionIds = ref(new Set()); // 追踪当前重试会话的错题ID
+const currentWrongQuestionIds = ref(new Set()); // 追踪当前错题本中的题目ID
 
 // 自动滚题相关状态
 const isAutoScroll = ref(true); // 自动滚题开关，默认开启
@@ -356,8 +370,14 @@ const wrongHistoryItems = computed(() => {
 const currentQuiz = computed(() => quizHistory.value.find(q => q.id === currentQuizId.value) || null);
 const questionsToShow = computed(() => {
   if (!currentQuiz.value) return [];
-  if (isViewingWrongOnly.value && currentQuiz.value.isSubmitted) {
-    return currentQuiz.value.questions.filter(q => !checkAnswer(q));
+  if (isViewingWrongOnly.value) {
+    if (!currentQuiz.value.isSubmitted && currentRetryWrongQuestionIds.value.size > 0) {
+      // 重试会话中，显示原始错题列表
+      return currentQuiz.value.questions.filter(q => currentRetryWrongQuestionIds.value.has(q.id));
+    } else {
+      // 错题本模式，显示所有在错题本中的题目（无论当前答案是否正确）
+      return currentQuiz.value.questions.filter(q => currentWrongQuestionIds.value.has(q.id));
+    }
   }
   return currentQuiz.value.questions;
 });
@@ -368,7 +388,14 @@ const currentScore = computed(() => {
 const currentTotal = computed(() => currentQuiz.value ? currentQuiz.value.questions.length : 0);
 
 // === 生命周期与持久化 ===
-onMounted(() => {
+onMounted(async () => {
+  // 检查登录状态
+  await userStore.initUser();
+  if (!userStore.isLogin) {
+    router.push('/');
+    return;
+  }
+  
   loadHistory();
   applyThemeFromStorage();
   loadAutoScrollPreference();
@@ -463,6 +490,17 @@ function loadQuiz(id, wrongOnly) {
   isCreating.value = false;
   currentQuestionIndex.value = 0; // 重置当前题目索引
   showNextButton.value = false; // 重置按钮状态
+  currentRetryWrongQuestionIds.value.clear(); // 清除重试会话的错题ID列表
+  
+  // 加载错题本时，根据isWrong属性更新currentWrongQuestionIds
+  if (wrongOnly && currentQuiz.value) {
+    currentWrongQuestionIds.value = new Set(
+      currentQuiz.value.questions.filter(q => q.isWrong).map(q => q.id)
+    );
+  } else {
+    currentWrongQuestionIds.value.clear();
+  }
+  
   window.scrollTo({ top: 0, behavior: 'smooth' });
   if(isMobile.value) closeAllSidebars();
 }
@@ -487,10 +525,22 @@ function deleteQuiz(id) {
 
 function submitQuiz() {
   if (currentQuiz.value) {
+    // 标记错题状态
+    currentQuiz.value.questions.forEach(q => {
+      q.isWrong = !checkAnswer(q);
+    });
     currentQuiz.value.isSubmitted = true;
-    isViewingWrongOnly.value = false;
-    showNextButton.value = false; // 提交后隐藏下一题按钮
+    // 清除重试会话的错题ID列表，回到正常过滤逻辑
+    currentRetryWrongQuestionIds.value.clear();
+    showNextButton.value = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function shuffleQuestions(questions) {
+  for (let i = questions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [questions[i], questions[j]] = [questions[j], questions[i]];
   }
 }
 
@@ -500,9 +550,36 @@ function resetCurrentQuiz() {
     currentQuiz.value.isSubmitted = false;
     currentQuiz.value.questions.forEach(q => q.userAnswer = '');
     isViewingWrongOnly.value = false;
-    currentQuestionIndex.value = 0; // 重置当前题目索引
-    showNextButton.value = false; // 重置按钮状态
+    currentQuestionIndex.value = 0;
+    showNextButton.value = false;
+    shuffleQuestions(currentQuiz.value.questions);
   }
+}
+
+function resetWrongQuestions() {
+  if (!currentQuiz.value || !currentQuiz.value.isSubmitted) return;
+  
+  const wrongQuestions = currentQuiz.value.questions.filter(q => !checkAnswer(q));
+  
+  if (wrongQuestions.length === 0) {
+    alert("当前没有错题需要重刷！");
+    return;
+  }
+  
+  if (!confirm(`确定要重新刷这 ${wrongQuestions.length} 道错题吗？`)) return;
+  
+  // 保存原始错题ID列表
+  currentRetryWrongQuestionIds.value = new Set(wrongQuestions.map(q => q.id));
+  
+  currentQuiz.value.isSubmitted = false;
+  // 只重置错题的答案
+  wrongQuestions.forEach(q => q.userAnswer = '');
+  // 设置为只看错题模式
+  isViewingWrongOnly.value = true;
+  currentQuestionIndex.value = 0;
+  showNextButton.value = false;
+  // 不需要打乱所有问题，因为 isViewingWrongOnly 会自动过滤出错题
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // 辅助逻辑
@@ -516,6 +593,26 @@ function checkAnswer(q) {
     const cleanUser = (q.userAnswer || "").replace(/\s+/g, '').toLowerCase();
     const cleanCorrect = (q.correctAnswer || "").replace(/\s+/g, '').toLowerCase();
     return cleanCorrect.length > 0 && cleanUser === cleanCorrect;
+  }
+}
+
+function removeFromWrongQuestions(questionId) {
+  if (!currentQuiz.value) return;
+  
+  // 从currentWrongQuestionIds中移除
+  currentWrongQuestionIds.value.delete(questionId);
+  
+  // 更新对应问题的isWrong属性
+  const question = currentQuiz.value.questions.find(q => q.id === questionId);
+  if (question) {
+    question.isWrong = false;
+  }
+  
+  // 如果错题本为空，显示提示
+  if (currentWrongQuestionIds.value.size === 0) {
+    setTimeout(() => {
+      alert("错题本已清空！");
+    }, 500);
   }
 }
 
@@ -1001,9 +1098,9 @@ function parseStandardQuiz(listItems) {
   return results;
 }
 </script>
-<style scoped>
-/* 使用 :global(:root) 定义全局变量，确保样式穿透 */
-:global(:root) {
+<style>
+/* 定义全局变量，确保样式穿透 */
+:root {
   --primary: #4a7c59;
   --primary-hover: #3a6345;
   --success: #609966;
@@ -1035,7 +1132,7 @@ function parseStandardQuiz(listItems) {
 
 }
 /* Dark Mode 适配 */
-:global([data-theme="dark"]) {
+[data-theme="dark"] {
   --primary: #8ebf95;
   --primary-hover: #4a7c59;
   --success: #609966;
@@ -1058,6 +1155,9 @@ function parseStandardQuiz(listItems) {
   --scrollbar-thumb: #404040;
   --scrollbar-thumb-hover: #505050;
 }
+</style>
+
+<style scoped>
 
 
 /* === 🆕 优化后的滚动条样式 === */
@@ -1104,6 +1204,13 @@ function parseStandardQuiz(listItems) {
 }
 .sidebar-content::-webkit-scrollbar-thumb {
   border: 1px solid transparent; /* 边框更细 */
+}
+
+/* 移动端适配：为侧边栏内容添加底部padding，避免被底部栏遮盖 */
+@media (max-width: 768px) {
+  .sidebar-content {
+    padding-bottom: 80px; /* 大于底部栏高度 */
+  }
 }
 
 
@@ -1536,6 +1643,7 @@ input:focus + .toggle-slider {
   justify-content: center;
   align-items: flex-start;
   -webkit-overflow-scrolling: touch; /* iOS 惯性滚动 */
+  color: var(--text);
 }
 
 .container {
@@ -1544,6 +1652,7 @@ input:focus + .toggle-slider {
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-height: 100%;
 }
 
 .quiz-area {
@@ -1587,7 +1696,7 @@ textarea:focus { outline: none; border-color: var(--primary); }
 .btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
 .parse-error { color: var(--danger); margin-top: 12px; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; }
 .default-title { color: var(--text); text-align: center; margin: 60px 0; font-weight: 500; font-size: 1.4em; width: 100%; }
-.empty-guide { text-align: center; margin-top: 40px; }
+.empty-guide { text-align: center; margin-top: 40px; background-color: var(--card-bg); padding: 40px 20px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
 
 /* 下一题按钮样式 */
 .next-question-btn-container {
@@ -1713,6 +1822,12 @@ textarea:focus { outline: none; border-color: var(--primary); }
 .question-card.status-wrong { border-left-color: var(--danger); background-color: rgba(239, 68, 68, 0.05); }
 
 .q-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 12px; }
+
+.remove-btn {
+  font-size: 0.85em;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
 .q-index { font-weight: 600; font-size: 1.1em; color: var(--text); flex: 1; }
 
 .q-content { font-size: 1.1em; margin-bottom: 24px; line-height: 1.7; color: var(--text); }
@@ -1885,7 +2000,7 @@ textarea:focus { outline: none; border-color: var(--primary); }
   /* 新增：针对底部按钮区域的修复 */
   .sidebar-footer {
     /* 增加底部内边距，避开 iPhone 等设备的底部 Home 横条 */
-    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
     /* 确保背景色不透明，防止内容重叠 */
     background-color: var(--card-bg);
     /* 确保它在最上层 */

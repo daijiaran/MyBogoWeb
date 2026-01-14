@@ -211,18 +211,17 @@ export default {
 /* 基础样式（桌面端） */
 .card {
   width: 300px;
-  border-radius: 12px;
   overflow: hidden;
-  background: #1e1e1e;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: transform .18s ease, box-shadow .18s ease;
+  transition: all 0.3s ease;
 }
 .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
 /* 链接样式 */
@@ -237,9 +236,9 @@ export default {
 /* 4:3图片区（核心不变） */
 .card-image-container {
   width: 100%;
-  padding-bottom: 75%; /* 4:3比例 */
+  padding-bottom: 75%;
   position: relative;
-  background: #2d2d2d;
+  background: rgba(255, 255, 255, 0.02);
 }
 .card-image {
   position: absolute;
@@ -256,7 +255,7 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background: #2d2d2d;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 /* 信息区（桌面端） */
@@ -269,8 +268,8 @@ export default {
 }
 .card-title {
   font-size: 1rem;
-  font-weight: 600;
-  color: #e0e0e0;
+  font-weight: 300;
+  color: #f0f0f0;
   margin: 0;
   line-height: 1.3;
   display: -webkit-box;
@@ -278,13 +277,14 @@ export default {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-align: left;
+  letter-spacing: 0.5px;
 }
 .card-metadata {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 0.85rem;
-  color: #999;
+  color: rgba(240, 240, 240, 0.6);
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -300,16 +300,19 @@ export default {
   align-items: center;
 }
 .channel-name {
-  color: #ccc;
+  color: rgba(240, 240, 240, 0.8);
+  font-weight: 300;
 }
 .avatar {
   width: 20px;
   height: 20px;
   border-radius: 50%;
   object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .views, .upload-time {
   white-space: nowrap;
+  font-weight: 300;
 }
 
 /* 骨架屏、错误状态（桌面端） */
@@ -322,8 +325,8 @@ export default {
 .skeleton-image {
   width: 100%;
   padding-bottom: 75%;
-  background: #2d2d2d;
-  background-image: linear-gradient(90deg, #2d2d2d 25%, #3a3a3a 37%, #2d2d2d 63%);
+  background: rgba(255, 255, 255, 0.02);
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 25%, rgba(255, 255, 255, 0.05) 37%, rgba(255, 255, 255, 0.02) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.2s linear infinite;
 }
@@ -335,9 +338,9 @@ export default {
 }
 .skeleton-line {
   height: 12px;
-  background: #2d2d2d;
-  border-radius: 6px;
-  background-image: linear-gradient(90deg, #2d2d2d 25%, #3a3a3a 37%, #2d2d2d 63%);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 0;
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 25%, rgba(255, 255, 255, 0.05) 37%, rgba(255, 255, 255, 0.02) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.2s linear infinite;
 }
@@ -351,24 +354,29 @@ export default {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #ff6b6b;
-  background: #2d1e1e;
+  color: rgba(255, 255, 255, 0.6);
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   padding: 16px;
   text-align: center;
+  font-weight: 300;
 }
 .retry-btn {
   margin-top: 12px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid #ff6b6b;
-  background: #1e1e1e;
-  color: #ff6b6b;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 12px;
 }
 .retry-btn:hover {
-  background: #ff6b6b;
-  color: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .publisher-error {
@@ -378,22 +386,23 @@ export default {
   align-items: center;
 }
 .publisher-error-text {
-  color: #ff6b6b;
+  color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
+  font-weight: 300;
 }
 .retry-small {
   font-size: 12px;
-  border: 1px solid #555;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 3px 6px;
-  border-radius: 4px;
-  background: #1e1e1e;
-  color: #ccc;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  font-weight: 300;
 }
 .retry-small:hover {
-  border-color: #409eff;
-  color: #409eff;
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 @keyframes shimmer {

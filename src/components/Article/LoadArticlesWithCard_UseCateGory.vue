@@ -79,56 +79,76 @@ onMounted(fetchArticleList)
 <style scoped>
 .articles-container {
   display: flex;
-
   flex-direction: column;
   align-items: center;
   padding: 24px 76px;
-
   width: 100%;
   box-sizing: border-box;
+  background: rgba(0, 0, 0, 0);
 }
 
 .loading-state,
 .error-state {
   text-align: center;
   padding: 60px 20px;
-  color: #666;
+  color: rgba(240, 240, 240, 0.6);
   width: 100%;
   max-width: 600px;
+  font-weight: 300;
+  letter-spacing: 1px;
 }
 
 .error-state button {
   margin-top: 16px;
-  border: 1px solid #d33;
-  background: none;
-  padding: 8px 16px;
-  color: #d33;
-  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.error-state button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.error-state button:hover::before {
+  left: 100%;
 }
 
 .error-state button:hover {
-  background: #d33;
-  color: #fff;
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.9);
 }
 
-/* 🟢 网格布局 */
+/* 网格布局 */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 2fr));
-  gap: 24px;
+  gap: 1px;
   width: 100%;
   max-width: 1400px;
   padding: 16px 0;
   box-sizing: border-box;
+  background: rgba(0, 0, 0, 0);
 }
 
 /* PC宽屏优化 */
 @media (min-width: 1200px) {
   .card-grid {
-    gap: 30px;
     padding: 20px 0;
   }
 }
@@ -137,7 +157,6 @@ onMounted(fetchArticleList)
 @media (max-width: 1024px) {
   .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 18px;
     max-width: 900px;
   }
 }
@@ -150,7 +169,6 @@ onMounted(fetchArticleList)
 
   .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
     padding: 8px 0;
   }
 
@@ -165,7 +183,6 @@ onMounted(fetchArticleList)
 @media (max-width: 480px) {
   .card-grid {
     grid-template-columns: repeat(2, minmax(100px, 1fr));
-    gap: 10px;
     padding: 6px 4px;
   }
 }
