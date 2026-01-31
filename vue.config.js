@@ -2,7 +2,7 @@ const { defineConfig } = require('@vue/cli-service')
 
 module.exports = defineConfig({
   transpileDependencies: true,
-  publicPath: './', // 必须是 ./
+  publicPath: '/',
   outputDir: 'dist',
   assetsDir: 'static',
   productionSourceMap: false,
