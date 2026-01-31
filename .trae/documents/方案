@@ -1,0 +1,381 @@
+为了在您的 Vue 项目中集成并运行 SQLite，我们需要完成以下几个步骤。
+
+**重要前置操作：**
+由于 WebAssembly (`.wasm`) 文件通常需要通过 HTTP 请求加载，且浏览器无法直接访问 `src` 目录下的静态资源，请先执行以下文件移动操作：
+
+1. 找到您上传的 `src/api/sqljs-worker-wasm/sql-wasm.wasm` 文件。
+2. 将其复制到项目的 **`public/`** 目录下（与 `index.html` 同级）。
+3. 确保可以通过浏览器访问 `http://localhost:8080/sql-wasm.wasm`（假设您本地运行在 8080 端口）。
+
+以下是具体的代码实施方案：
+
+### 1. 配置路由 (`src/router/index.js`)
+
+我们需要在路由中注册 SQL 页面，以便通过 URL 访问。
+
+```javascript
+import { createRouter, createWebHashHistory } from 'vue-router'
+import Home from '../views/HomeView.vue'
+import UnityProjectView from '../views/UnityProjectView.vue'
+import PromotionalVideoView from '../views/PromotionalVideoView.vue'
+import Manage from '../views/ManageView.vue'
+import ArticleView from "@/views/ArticleView.vue"
+import UserView from "@/views/UserView.vue"
+import LogView from "@/views/LogView.vue"
+import ExamTool from "@/components/Pages/quiz-app-container.vue"
+// 1. 引入 SQL 组件
+import SQLView from "@/components/Pages/SQL.vue"
+
+const routes = [
+    {
+        path: '/',
+        name: 'Home',
+        component: Home
+    },
+    {
+        path: '/UnityProject',
+        name: 'UnityProject',
+        component: UnityProjectView
+    },
+    {
+        path: '/PromotionalVideoView',
+        name: 'PromotionalVideo',
+        component: PromotionalVideoView
+    },
+    {
+        path: '/manage',
+        name: 'Manage',
+        component: Manage
+    },
+    {
+        path: '/article/:id',
+        name: 'Article',
+        component: ArticleView,
+        props: true
+    },
+    {
+        path: '/LogView',
+        name: 'LogView',
+        component: LogView
+    },
+    {
+        path: '/quiz-app-container',
+        name: 'ExamTool',
+        component: ExamTool
+    },
+    {
+        path: '/user',
+        name: 'User',
+        component: UserView
+    },
+    // 2. 添加 SQL 页面路由
+    {
+        path: '/sql',
+        name: 'SQL',
+        component: SQLView
+    }
+]
+
+const router = createRouter({
+    history: createWebHashHistory(),
+    routes
+})
+
+export default router
+
+```
+
+### 2. 实现 SQL 组件 (`src/components/Pages/SQL.vue`)
+
+这个组件将负责加载数据库引擎、提供输入框和显示结果。
+
+```vue
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+// 引入你提供的 worker.sql-wasm.js，它导出了 initSqlJs 函数
+// 请确保路径正确指向 src/api/sqljs-worker-wasm/worker.sql-wasm.js
+import initSqlJs from '../../api/sqljs-worker-wasm/worker.sql-wasm.js';
+
+const router = useRouter();
+const db = ref(null);
+const isReady = ref(false);
+const errorMsg = ref('');
+const queryStr = ref("CREATE TABLE hello (a int, b char);\nINSERT INTO hello VALUES (0, 'hello');\nINSERT INTO hello VALUES (1, 'world');\nSELECT * FROM hello;");
+const results = ref([]);
+const executed = ref(false);
+
+// 初始化数据库
+const initDatabase = async () => {
+  try {
+    // 加载 SQL 引擎
+    const SQL = await initSqlJs({
+      // 关键：指定 wasm 文件在 public 目录下的路径
+      locateFile: () => '/sql-wasm.wasm' 
+    });
+    
+    // 创建内存数据库
+    db.value = new SQL.Database();
+    isReady.value = true;
+  } catch (err) {
+    console.error(err);
+    errorMsg.value = "数据库引擎加载失败: " + err.message;
+  }
+};
+
+const runQuery = () => {
+  if (!db.value) return;
+  errorMsg.value = '';
+  results.value = [];
+  executed.value = false;
+
+  try {
+    // 执行 SQL
+    const res = db.value.exec(queryStr.value);
+    results.value = res;
+    executed.value = true;
+  } catch (err) {
+    errorMsg.value = err.message;
+  }
+};
+
+const resetDb = async () => {
+    if(db.value) db.value.close();
+    await initDatabase();
+    queryStr.value = "SELECT 'Reset Successful' as status;";
+    runQuery();
+}
+
+onMounted(() => {
+  initDatabase();
+});
+</script>
+
+<template>
+  <div class="sql-page-container">
+    <header class="sql-header">
+      <div class="header-left">
+        <button class="btn secondary sm" @click="router.push('/quiz-app-container')">
+          ← 返回刷题
+        </button>
+        <h1>💾 SQL 语法练习</h1>
+      </div>
+      <div class="header-right">
+        <span v-if="!isReady" class="status loading">⏳ 引擎加载中...</span>
+        <span v-else class="status ready">✅ 引擎就绪</span>
+      </div>
+    </header>
+
+    <main class="sql-main">
+      <div class="editor-section">
+        <div class="toolbar">
+          <button class="btn primary" @click="runQuery" :disabled="!isReady">▶ 运行 (Run)</button>
+          <button class="btn secondary" @click="resetDb" :disabled="!isReady">↺ 重置数据库</button>
+        </div>
+        <textarea 
+          v-model="queryStr" 
+          class="sql-editor" 
+          placeholder="请输入 SQL 语句..."
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <div class="result-section">
+        <div v-if="errorMsg" class="message error">
+          <strong>❌ 错误:</strong> {{ errorMsg }}
+        </div>
+        
+        <div v-else-if="executed && results.length === 0" class="message success">
+          ✨ 执行成功 (无返回结果)
+        </div>
+
+        <div v-for="(res, index) in results" :key="index" class="result-table-wrapper">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th v-for="col in res.columns" :key="col">{{ col }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, rIndex) in res.values" :key="rIndex">
+                <td v-for="(val, cIndex) in row" :key="cIndex">{{ val }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="result-meta">{{ res.values.length }} 行结果</div>
+        </div>
+      </div>
+    </main>
+  </div>
+</template>
+
+<style scoped>
+/* 复用部分 quiz-app-container 的变量 */
+.sql-page-container {
+  min-height: 100vh;
+  background-color: var(--bg, #f7f7f4);
+  color: var(--text, #2d3436);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.sql-header {
+  height: 64px;
+  background-color: var(--card-bg, #ffffff);
+  border-bottom: 1px solid var(--border, #e6e6e2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sql-header h1 {
+  font-size: 1.2rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.status {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.status.loading { color: var(--warning, #d4a373); }
+.status.ready { color: var(--success, #609966); }
+
+.sql-main {
+  flex: 1;
+  padding: 24px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+}
+
+.sql-editor {
+  width: 100%;
+  height: 200px;
+  padding: 16px;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 8px;
+  background-color: var(--input-bg, #fafaf9);
+  color: var(--text, #333);
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.sql-editor:focus {
+  outline: none;
+  border-color: var(--primary, #4a7c59);
+}
+
+.message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.message.error { background-color: rgba(207, 92, 92, 0.1); color: var(--danger, #cf5c5c); }
+.message.success { background-color: rgba(96, 153, 102, 0.1); color: var(--success, #609966); }
+
+.result-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border, #eee);
+  border-radius: 8px;
+  background: var(--card-bg, #fff);
+  margin-bottom: 24px;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.result-table th, .result-table td {
+  padding: 10px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #eee);
+}
+
+.result-table th {
+  background-color: var(--bg, #f9f9f9);
+  font-weight: 600;
+}
+
+.result-meta {
+  padding: 8px 16px;
+  font-size: 0.8em;
+  color: var(--text-secondary, #888);
+  text-align: right;
+  background: var(--bg, #f9f9f9);
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+.btn:hover { opacity: 0.9; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn.primary { background-color: var(--primary, #4a7c59); color: white; }
+.btn.secondary { background-color: var(--text-secondary, #636e72); color: white; }
+.btn.sm { font-size: 0.85rem; padding: 6px 12px; }
+
+/* Dark Mode 适配 (复用 root 变量) */
+[data-theme="dark"] .sql-editor {
+  background-color: #2d2d2d;
+  color: #e0e0e0;
+  border-color: #404040;
+}
+</style>
+
+```
+
+### 3. 添加入口按钮 (`src/components/Pages/quiz-app-container.vue`)
+
+修改 `header-right-actions` 部分，添加一个“SQL”按钮。
+
+```vue
+<div class="header-right-actions">
+  <button 
+    class="icon-btn" 
+    @click="$router.push('/sql')" 
+    title="SQL 语法练习"
+    style="font-size: 1.2rem; margin-right: 4px;"
+  >
+    💾
+  </button>
+
+  <div v-if="!isMobile" class="auto-scroll-toggle" title="自动滚题">
+    ```
+
+完成以上修改后，点击页面右上角新增的 💾 图标，即可跳转到 SQL 练习页面。记得一定要把 `sql-wasm.wasm` 移到 `public` 文件夹！
+
+```

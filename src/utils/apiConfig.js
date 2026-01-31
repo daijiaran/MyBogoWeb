@@ -10,7 +10,7 @@ export function getApiBaseUrl() {
   if (isDevelopment) {
     return process.env.VUE_APP_API_BASE_URL_DEVELOP || 'http://localhost:8080';
   } else {
-    return process.env.VUE_APP_API_BASE_URL_RELEASE || 'http://223.109.142.187:8443';
+    return process.env.VUE_APP_API_BASE_URL_RELEASE || 'http:localhost:8443';
   }
 }
 

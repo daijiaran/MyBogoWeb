@@ -1,0 +1,4 @@
+node_modules
+dist
+src/api/sqljs-worker-wasm/worker.sql-wasm.js
+*.wasm

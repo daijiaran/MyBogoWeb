@@ -28,6 +28,11 @@
 
           <template v-if="!isMobile">
             <div v-if="currentQuiz.isSubmitted" class="divider"></div>
+            <div class="divider"></div>
+            <button class="btn secondary sm" @click="toggleQuizMode" :class="{ 'active': quizMode === 'single' }">
+              {{ quizMode === 'scroll' ? '单题' : '滚动' }}模式
+            </button>
+            <div class="divider"></div>
             <button v-if="!currentQuiz.isSubmitted" class="btn sm" @click="submitQuiz">提交</button>
             <template v-else>
               <button v-if="!isViewingWrongOnly" class="btn secondary sm" @click="resetCurrentQuiz">重做</button>
@@ -45,6 +50,14 @@
           </div>
 
       <div class="header-right-actions">
+        <button 
+          class="icon-btn" 
+          @click="$router.push('/sql')" 
+          title="SQL 语法练习"
+          style="font-size: 1.2rem; margin-right: 4px;"
+        >
+          💾SQL 语法练习
+        </button>
         <div v-if="!isMobile" class="auto-scroll-toggle" title="自动滚题">
           <span class="toggle-label">自动滚题</span>
           <label class="toggle-switch">
@@ -73,33 +86,124 @@
       <aside class="sidebar left-sidebar" :class="{ collapsed: leftSidebarCollapsed, 'mobile-open': !leftSidebarCollapsed && isMobile }">
         <div class="sidebar-header">
           <span>📚 历史试卷</span>
-          <button
-              class="btn secondary sm new-quiz-btn"
-              @click="createNewQuiz"
-          >
-            新试卷
-          </button>
+          <div class="sidebar-header-buttons">
+            <button
+                class="btn secondary sm new-quiz-btn"
+                @click="createNewQuiz"
+            >
+              新试卷
+            </button>
+            <button
+                class="btn secondary sm new-group-btn"
+                @click="createNewGroup"
+            >
+              新建分组
+            </button>
+          </div>
         </div>
         <div class="sidebar-content">
           <ul class="sidebar-list">
-            <li v-if="reversedHistory.length === 0" class="empty-list-item">暂无记录</li>
+            <!-- 显示分组列表 -->
             <li
-                v-for="quiz in reversedHistory"
+                v-for="group in quizGroups"
+                :key="group.id"
+                class="sidebar-group"
+                draggable="false"
+                @dragover="handleDragOver"
+                @dragenter="handleDragEnter($event)"
+                @dragleave="handleDragLeave($event)"
+                @drop="handleDrop($event, group.id)"
+            >
+              <div class="group-header" :class="{ expanded: group.isExpanded }" @click="toggleGroupExpanded(group.id)">
+                <span class="group-icon">{{ group.isExpanded ? '▼' : '▶' }}</span>
+                <span class="group-name">{{ group.name }}</span>
+                <span class="group-count">({{ group.quizIds.length }})</span>
+                <div class="group-actions">
+                  <button class="action-btn" @click.stop="renameGroup(group.id)">✏️</button>
+                  <button class="action-btn delete" @click.stop="deleteGroup(group.id)">🗑️</button>
+                </div>
+              </div>
+              
+              <!-- 分组内的试卷列表 -->
+              <ul v-if="group.isExpanded" class="group-quizzes">
+                <li
+                    v-for="quizId in group.quizIds"
+                    :key="quizId"
+                    class="sidebar-item group-quiz-item"
+                    :class="{ 
+                      active: currentQuizId === quizId && !isViewingWrongOnly,
+                      'has-progress': quizMode === 'single' && !currentQuiz.isSubmitted && currentQuizId === quizId
+                    }"
+                    @click="loadQuiz(quizId, false)"
+                    @mouseenter="hoveredQuizId = quizId"
+                    @mouseleave="hoveredQuizId = null"
+                    draggable="true"
+                    @dragstart="handleDragStart($event, { id: quizId }, 'quiz')"
+                    @dragend="handleDragEnd"
+                >
+                  <transition name="progress-fade">
+                    <span v-show="quizMode === 'single' && !currentQuiz.isSubmitted && currentQuizId === quizId" class="question-progress">
+                      {{ currentQuestionIndex + 1 }}/{{ questionsToShow.length }}
+                    </span>
+                  </transition>
+                  <span v-if="getQuizById(quizId)?.isSubmitted" class="score-tag" :class="getScoreClass(getQuizById(quizId))">
+                    {{ getQuizScore(getQuizById(quizId)) }}/{{ getQuizById(quizId).questions.length }}
+                  </span>
+                  <div class="quiz-item-title">{{ getQuizById(quizId)?.title }}</div>
+                  <span class="date">
+                    {{ formatDate(getQuizById(quizId)?.timestamp) }}
+                  </span>
+                  <transition name="actions-slide">
+                    <div v-show="hoveredQuizId === quizId" class="sidebar-actions">
+                      <div class="action-buttons">
+                        <button class="action-btn" @click.stop="renameQuiz(quizId)">✏️</button>
+                        <button class="action-btn" @click.stop="removeQuizFromGroup(quizId, group.id)">📤</button>
+                        <button class="action-btn delete" @click.stop="deleteQuiz(quizId)">🗑️</button>
+                      </div>
+                    </div>
+                  </transition>
+                </li>
+              </ul>
+            </li>
+            
+            <!-- 未分组的试卷列表 - 直接显示在主列表中 -->
+            <li
+                v-for="quiz in ungroupedQuizzes"
                 :key="quiz.id"
                 class="sidebar-item"
-                :class="{ active: currentQuizId === quiz.id && !isViewingWrongOnly }"
+                :class="{ 
+                  active: currentQuizId === quiz.id && !isViewingWrongOnly,
+                  'has-progress': quizMode === 'single' && !currentQuiz.isSubmitted && currentQuizId === quiz.id
+                }"
                 @click="loadQuiz(quiz.id, false)"
+                @mouseenter="hoveredQuizId = quiz.id"
+                @mouseleave="hoveredQuizId = null"
+                draggable="true"
+                @dragstart="handleDragStart($event, quiz, 'quiz')"
+                @dragend="handleDragEnd"
             >
+              <transition name="progress-fade">
+                <span v-show="quizMode === 'single' && !currentQuiz.isSubmitted && currentQuizId === quiz.id" class="question-progress">
+                  {{ currentQuestionIndex + 1 }}/{{ questionsToShow.length }}
+                </span>
+              </transition>
               <span v-if="quiz.isSubmitted" class="score-tag" :class="getScoreClass(quiz)">
                 {{ getQuizScore(quiz) }}/{{ quiz.questions.length }}
               </span>
               <div class="quiz-item-title">{{ quiz.title }}</div>
-              <span class="date">{{ formatDate(quiz.timestamp) }}</span>
-              <div class="sidebar-actions">
-                <button class="action-btn" @click.stop="renameQuiz(quiz.id)">✏️</button>
-                <button class="action-btn delete" @click.stop="deleteQuiz(quiz.id)">🗑️</button>
-              </div>
+              <span class="date">
+                {{ formatDate(quiz.timestamp) }}
+              </span>
+              <transition name="actions-slide">
+                <div v-show="hoveredQuizId === quiz.id" class="sidebar-actions">
+                  <div class="action-buttons">
+                    <button class="action-btn" @click.stop="renameQuiz(quiz.id)">✏️</button>
+                    <button class="action-btn delete" @click.stop="deleteQuiz(quiz.id)">🗑️</button>
+                  </div>
+                </div>
+              </transition>
             </li>
+            <li v-if="ungroupedQuizzes.length === 0" class="empty-list-item">暂无未分组试卷</li>
           </ul>
         </div>
         <div class="sidebar-footer">
@@ -150,12 +254,13 @@
               🎉 太棒了！本卷没有错题。
             </div>
             <div
-                v-for="(q, index) in questionsToShow"
+                v-for="(q, index) in displayedQuestions"
                 :key="q.id"
                 class="question-card"
                 :class="{
                   'status-correct': currentQuiz.isSubmitted && checkAnswer(q),
-                  'status-wrong': currentQuiz.isSubmitted && !checkAnswer(q)
+                  'status-wrong': currentQuiz.isSubmitted && !checkAnswer(q),
+                  'single-mode': quizMode === 'single'
                 }"
                 @click="closeAllSidebars"
             >
@@ -167,7 +272,9 @@
               <div class="q-content" v-html="q.content"></div>
 
               <div v-if="q.type === 'single'" class="options-list">
-                <label v-for="opt in q.options" :key="opt.label" class="option-label">
+                <label v-for="opt in q.options" :key="opt.label" class="option-label" :class="{
+                  'correct-option': currentQuiz.isSubmitted && opt.label === q.correctAnswer
+                }">
                   <input
                       type="radio"
                       :name="`q-${q.id}`"
@@ -181,7 +288,9 @@
               </div>
 
               <div v-else-if="q.type === 'multiple'" class="options-list">
-                <label v-for="opt in q.options" :key="opt.label" class="option-label">
+                <label v-for="opt in q.options" :key="opt.label" class="option-label" :class="{
+                  'correct-option': currentQuiz.isSubmitted && (q.correctAnswer || '').split(',').includes(opt.label)
+                }">
                   <input
                       type="checkbox"
                       :value="opt.label"
@@ -226,6 +335,20 @@
 <!--                {{ currentQuestionIndex < questionsToShow.length - 1 ? '下一题' : '完成答题' }}-->
 <!--              </button>-->
 <!--            </div>-->
+            
+            <!-- 单题模式下的上一题和下一题按钮 -->
+            <div v-if="quizMode === 'single' && !currentQuiz.isSubmitted" class="single-mode-nav-btns">
+              <button 
+                class="btn secondary shadow-btn prev-btn" 
+                @click="goToPreviousQuestion"
+                :disabled="currentQuestionIndex === 0"
+              >
+                上一题
+              </button>
+              <button class="btn primary shadow-btn next-btn" @click="goToNextQuestion">
+                {{ currentQuestionIndex < questionsToShow.length - 1 ? '下一题' : '完成答题' }}
+              </button>
+            </div>
           </div>
         </div>
         </div>
@@ -334,6 +457,7 @@ const router = useRouter();
 // === 常量与状态 ===
 const STORAGE_KEY = 'quiz_tool_history_v2';
 const quizHistory = ref([]);
+const quizGroups = ref([]); // 新增：分组列表
 const currentQuizId = ref(null);
 const isViewingWrongOnly = ref(false);
 const leftSidebarCollapsed = ref(false);
@@ -345,16 +469,22 @@ const isCreating = ref(false);
 const isMobile = ref(false); // 新增：移动端状态检测
 const currentRetryWrongQuestionIds = ref(new Set()); // 追踪当前重试会话的错题ID
 const currentWrongQuestionIds = ref(new Set()); // 追踪当前错题本中的题目ID
+const draggedItem = ref(null); // 新增：拖拽的项目
+const draggedItemType = ref(null); // 新增：拖拽的项目类型 ('quiz' 或 'group')
 
 // 自动滚题相关状态
 const isAutoScroll = ref(true); // 自动滚题开关，默认开启
 const showNextButton = ref(false); // 下一题按钮显示状态
 const currentQuestionIndex = ref(0); // 当前题目索引
 const showMultiChoiceHint = ref(false); // 多选题提示显示状态
+const quizMode = ref('scroll'); // 答题模式：'scroll'滚动模式，'single'单题模式
 
 // Export Modal State
 const showExportModalFlag = ref(false);
 const selectedQuizzes = ref([]);
+
+// 卡片悬停状态
+const hoveredQuizId = ref(null);
 
 // === 计算属性 ===
 const reversedHistory = computed(() => [...quizHistory.value].reverse());
@@ -386,6 +516,15 @@ const currentScore = computed(() => {
   return currentQuiz.value.questions.filter(q => checkAnswer(q)).length;
 });
 const currentTotal = computed(() => currentQuiz.value ? currentQuiz.value.questions.length : 0);
+const displayedQuestions = computed(() => {
+  if (quizMode.value === 'single') {
+    // 单题模式下只返回当前索引的题目
+    const q = questionsToShow.value[currentQuestionIndex.value];
+    return q ? [q] : [];
+  }
+  // 滚动模式下返回所有题目
+  return questionsToShow.value;
+});
 
 // === 生命周期与持久化 ===
 onMounted(async () => {
@@ -397,6 +536,7 @@ onMounted(async () => {
   }
   
   loadHistory();
+  loadGroups(); // 新增：加载分组数据
   applyThemeFromStorage();
   loadAutoScrollPreference();
   checkMobile();
@@ -428,6 +568,168 @@ function toggleAutoScroll() {
     }
   }
 }
+
+function toggleQuizMode() {
+  quizMode.value = quizMode.value === 'scroll' ? 'single' : 'scroll';
+  currentQuestionIndex.value = 0; // 切换模式时重置当前题目索引
+  showNextButton.value = false; // 重置按钮状态
+  window.scrollTo({ top: 0, behavior: 'smooth' }); // 滚动到顶部
+}
+
+// 新增：创建新分组
+function createNewGroup() {
+  const groupName = prompt("请输入分组名称:");
+  if (groupName && groupName.trim()) {
+    const newGroup = {
+      id: Date.now().toString(),
+      name: groupName.trim(),
+      quizIds: [], // 分组内的试卷ID列表
+      isExpanded: true, // 分组默认展开
+      timestamp: Date.now()
+    };
+    quizGroups.value.push(newGroup);
+    saveGroups();
+  }
+}
+
+// 新增：保存分组到本地存储
+function saveGroups() {
+  localStorage.setItem('quiz_tool_groups_v1', JSON.stringify(quizGroups.value));
+}
+
+// 新增：从本地存储加载分组
+function loadGroups() {
+  const savedGroups = localStorage.getItem('quiz_tool_groups_v1');
+  if (savedGroups) {
+    try {
+      quizGroups.value = JSON.parse(savedGroups);
+    } catch (e) {
+      console.error("加载分组失败", e);
+      quizGroups.value = [];
+    }
+  }
+}
+
+// 新增：展开/折叠分组
+function toggleGroupExpanded(groupId) {
+  const group = quizGroups.value.find(g => g.id === groupId);
+  if (group) {
+    group.isExpanded = !group.isExpanded;
+    saveGroups();
+  }
+}
+
+// 新增：重命名分组
+function renameGroup(groupId) {
+  const group = quizGroups.value.find(g => g.id === groupId);
+  if (!group) return;
+  const newName = prompt("请输入新的分组名称:", group.name);
+  if (newName && newName.trim() !== group.name) {
+    group.name = newName.trim();
+    saveGroups();
+  }
+}
+
+// 新增：删除分组
+function deleteGroup(groupId) {
+  if (!confirm("确定要删除这个分组吗？分组内的试卷不会被删除。")) return;
+  quizGroups.value = quizGroups.value.filter(g => g.id !== groupId);
+  saveGroups();
+}
+
+// 新增：拖拽相关函数
+function handleDragStart(event, item, type) {
+  draggedItem.value = item;
+  draggedItemType.value = type;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', item.id);
+  // 添加拖拽样式
+  if (event.currentTarget) {
+    event.currentTarget.classList.add('dragging');
+  }
+}
+
+function handleDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(event) {
+  event.preventDefault();
+  // 高亮分组作为放置区域
+  const dropZone = event.currentTarget;
+  if (dropZone) {
+    dropZone.classList.add('drop-zone');
+  }
+}
+
+function handleDragLeave(event) {
+  // 移除高亮样式
+  const dropZone = event.currentTarget;
+  if (dropZone) {
+    dropZone.classList.remove('drop-zone');
+  }
+}
+
+function handleDrop(event, groupId) {
+  event.preventDefault();
+  
+  // 移除高亮样式
+  const dropZone = event.currentTarget;
+  if (dropZone) {
+    dropZone.classList.remove('drop-zone');
+  }
+  
+  if (!draggedItem.value || draggedItemType.value !== 'quiz') return;
+  
+  // 将试卷添加到分组
+  const group = quizGroups.value.find(g => g.id === groupId);
+  if (group && !group.quizIds.includes(draggedItem.value.id)) {
+    group.quizIds.push(draggedItem.value.id);
+    saveGroups();
+  }
+  
+  // 清除拖拽状态
+  draggedItem.value = null;
+  draggedItemType.value = null;
+  if (event.currentTarget) {
+    event.currentTarget.classList.remove('dragging');
+  }
+}
+
+function handleDragEnd(event) {
+  // 清除拖拽样式
+  if (event.currentTarget) {
+    event.currentTarget.classList.remove('dragging');
+  }
+  draggedItem.value = null;
+  draggedItemType.value = null;
+}
+
+// 新增：从分组中移除试卷
+function removeQuizFromGroup(quizId, groupId) {
+  const group = quizGroups.value.find(g => g.id === groupId);
+  if (group) {
+    group.quizIds = group.quizIds.filter(id => id !== quizId);
+    saveGroups();
+  }
+}
+
+// 新增：根据ID获取试卷
+function getQuizById(quizId) {
+  return quizHistory.value.find(quiz => quiz.id === quizId) || null;
+}
+
+// 新增：获取未分组的试卷
+const ungroupedQuizzes = computed(() => {
+  // 获取所有已分组的试卷ID
+  const groupedQuizIds = new Set();
+  quizGroups.value.forEach(group => {
+    group.quizIds.forEach(quizId => groupedQuizIds.add(quizId));
+  });
+  // 返回未分组的试卷
+  return quizHistory.value.filter(quiz => !groupedQuizIds.has(quiz.id)).reverse();
+});
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile);
@@ -517,6 +819,13 @@ function renameQuiz(id) {
 function deleteQuiz(id) {
   if (!confirm("确定要永久删除这张试卷吗？")) return;
   quizHistory.value = quizHistory.value.filter(q => q.id !== id);
+  
+  // 从所有分组中移除被删除的试卷
+  quizGroups.value.forEach(group => {
+    group.quizIds = group.quizIds.filter(quizId => quizId !== id);
+  });
+  saveGroups();
+  
   if (currentQuizId.value === id) {
     currentQuizId.value = null;
     isCreating.value = false;
@@ -534,6 +843,9 @@ function submitQuiz() {
     currentRetryWrongQuestionIds.value.clear();
     showNextButton.value = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // 单题模式下提交后自动切换为滚动模式
+    quizMode.value = 'scroll';
   }
 }
 
@@ -661,8 +973,15 @@ function handleOptionSelect(q, index) {
   saveHistory();
   closeAllSidebars();
   
-  // 更新当前题目索引
-  currentQuestionIndex.value = index;
+  // 更新当前题目索引 - 在单题模式下需要找到实际在 questionsToShow 中的索引
+  if (quizMode.value === 'single') {
+    const actualIndex = questionsToShow.value.findIndex(item => item.id === q.id);
+    if (actualIndex !== -1) {
+      currentQuestionIndex.value = actualIndex;
+    }
+  } else {
+    currentQuestionIndex.value = index;
+  }
   
   // 多选题提示
   if (q.type === 'multiple' && isAutoScroll.value && !showMultiChoiceHint.value) {
@@ -671,6 +990,12 @@ function handleOptionSelect(q, index) {
     setTimeout(() => {
       showMultiChoiceHint.value = false;
     }, 3000);
+  }
+  
+  // 单题模式下不自动跳转，始终显示下一题按钮
+  if (quizMode.value === 'single') {
+    showNextButton.value = true;
+    return;
   }
   
   // 判断是否触发自动滚题
@@ -688,6 +1013,18 @@ function handleOptionSelect(q, index) {
   }
 }
 
+// 跳转到上一题
+function goToPreviousQuestion() {
+  if (!currentQuiz.value) return;
+  
+  const prevIndex = currentQuestionIndex.value - 1;
+  
+  if (prevIndex >= 0) {
+    // 有上一题，更新当前题目索引
+    currentQuestionIndex.value = prevIndex;
+  }
+}
+
 // 跳转到下一题
 function goToNextQuestion() {
   if (!currentQuiz.value) return;
@@ -696,14 +1033,19 @@ function goToNextQuestion() {
   const nextIndex = currentQuestionIndex.value + 1;
   
   if (nextIndex < totalQuestions) {
-    // 有下一题，滚动到下一题
+    // 有下一题，更新当前题目索引
     currentQuestionIndex.value = nextIndex;
-    scrollToQuestion(nextIndex);
-    showNextButton.value = false; // 滚动后隐藏下一题按钮
+    
+    // 滚动模式下才需要滚动到下一题
+    if (quizMode.value === 'scroll') {
+      scrollToQuestion(nextIndex);
+    }
+    
+    showNextButton.value = false; // 重置按钮状态
   } else {
     // 没有下一题，检查是否需要提交
     if (!currentQuiz.value.isSubmitted) {
-      // 自动提交
+      // 自动提交，submitQuiz 函数会自动切换到滚动模式
       submitQuiz();
     }
     showNextButton.value = false;
@@ -883,6 +1225,7 @@ function handleFileUpload(event) {
 function mergeImportedQuizzes(importedQuizzes) {
   // Get existing quiz IDs to check for duplicates
   const existingIds = new Set(quizHistory.value.map(quiz => quiz.id));
+  let lastImportedQuizId = null;
   
   importedQuizzes.forEach(quiz => {
     // Validate required fields
@@ -911,7 +1254,13 @@ function mergeImportedQuizzes(importedQuizzes) {
     // Add to history
     quizHistory.value.push(quiz);
     existingIds.add(quizId);
+    lastImportedQuizId = quizId;
   });
+  
+  // 自动加载最后导入的试卷
+  if (lastImportedQuizId) {
+    loadQuiz(lastImportedQuizId, false);
+  }
 }
 // === 解析核心逻辑 ===
 function parseAndGenerate() {
@@ -1101,59 +1450,52 @@ function parseStandardQuiz(listItems) {
 <style>
 /* 定义全局变量，确保样式穿透 */
 :root {
-  --primary: #4a7c59;
-  --primary-hover: #3a6345;
-  --success: #609966;
-  --danger: #cf5c5c;
-  --warning: #d4a373;
-  --bg: #f7f7f4;
-  --card-bg: #ffffff;
-  --text: #2d3436;
-  --text-secondary: #636e72;
-  --text-light: #b2bec3;
-  --border: #e6e6e2;
-  --border-light: #f0f0ed;
-  --input-bg: #fafaf9;
-  --shadow: 0 4px 20px -2px rgba(45, 52, 54, 0.08);
-  --shadow-lg: 0 10px 15px -3px rgba(45, 52, 54, 0.1);
-  --sidebar-width: 280px;
-  --header-height: 64px;
+  --primary: #007AFF;
+  --primary-hover: #0056CC;
+  --success: #34C759;
+  --danger: #FF3B30;
+  --warning: #FF9500;
+  --bg: #F2F2F7;
+  --card-bg: #FFFFFF;
+  --text: #1C1C1E;
+  --text-secondary: #636366;
+  --text-light: #8E8E93;
+  --border: #E5E5EA;
+  --border-light: #F0F0F5;
+  --input-bg: #F2F2F7;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --sidebar-width: 350px;
+  --header-height: 80px;
 
-
-  /* --- 🆕 新增：滚动条专用变量 (浅色模式) --- */
-  /* 轨道背景设为透明，看起来更现代 */
+  /* 滚动条专用变量 (浅色模式) */
   --scrollbar-track: transparent;
-  /* 滑块颜色：使用浅灰色，不抢眼 */
-  --scrollbar-thumb: #c8c8c6;
-  /* 悬停颜色：加深灰色 */
-  --scrollbar-thumb-hover: #a0a09e;
-  /* 滚动条宽度 */
-  --scrollbar-width: 10px;
-
+  --scrollbar-thumb: #C7C7CC;
+  --scrollbar-thumb-hover: #AEAEB2;
+  --scrollbar-width: 8px;
 }
 /* Dark Mode 适配 */
 [data-theme="dark"] {
-  --primary: #8ebf95;
-  --primary-hover: #4a7c59;
-  --success: #609966;
-  --danger: #cf5c5c;
-  --warning: #d4a373;
-  --bg: #1c1c1c;
-  --card-bg: #262626;
-  --text: #e0e0e0;
-  --text-secondary: #a3a3a3;
-  --text-light: #b2bec3;
-  --border: #333333;
-  --border-light: #404040;
-  --input-bg: #2d2d2d;
-  --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  --primary: #0A84FF;
+  --primary-hover: #0066CC;
+  --success: #30D158;
+  --danger: #FF453A;
+  --warning: #FF9F0A;
+  --bg: #000000;
+  --card-bg: #1C1C1E;
+  --text: #FFFFFF;
+  --text-secondary: #8E8E93;
+  --text-light: #636366;
+  --border: #2C2C2E;
+  --border-light: #38383A;
+  --input-bg: #2C2C2E;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
 
-  /* --- 🆕 新增：滚动条专用变量 (深色模式) --- */
-  /* 深色模式下，滑块需要比背景略亮 */
+  /* 滚动条专用变量 (深色模式) */
   --scrollbar-track: transparent;
-  --scrollbar-thumb: #404040;
-  --scrollbar-thumb-hover: #505050;
+  --scrollbar-thumb: #48484A;
+  --scrollbar-thumb-hover: #636366;
 }
 </style>
 
@@ -1222,13 +1564,54 @@ function parseStandardQuiz(listItems) {
   width: 100%;
   height: 100%;
   z-index: 100;
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg);
   color: var(--text);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  line-height: 1.5;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 建立清晰的字体层次结构 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--text);
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.375rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p, div, span, button {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* 辅助文本样式 */
+.text-secondary {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-xs {
+  font-size: 0.75rem;
 }
 
 .app-brand h1, .quiz-title {
@@ -1244,10 +1627,12 @@ header {
   display: flex;
   align-items: center;
   padding: 0 24px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   z-index: 60;
   gap: 20px;
   flex-shrink: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .app-brand h1 {
@@ -1279,8 +1664,8 @@ header {
 }
 
 .quiz-title {
-  font-weight: 600;
-  font-size: 1.1em;
+  font-weight: 500;
+  font-size: 1.05em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1291,7 +1676,7 @@ header {
 .quiz-action-group {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex-shrink: 0;
 }
 
@@ -1310,6 +1695,66 @@ header {
 .divider {
   border-left: 1px solid var(--border-light);
   height: 24px;
+}
+
+/* 侧边栏优化 */
+.sidebar {
+  background-color: var(--card-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 350px !important;
+  transition: all 0.3s ease;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+}
+
+.sidebar-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+/* 移动端底部栏样式 */
+.mobile-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: var(--card-bg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 60;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* 导入区域优化 */
+.importer-section {
+  background-color: var(--card-bg);
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  max-width: 850px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* 移动端底部栏样式 */
@@ -1394,13 +1839,15 @@ header {
   font-size: 0.9rem;
   color: var(--text);
   white-space: nowrap;
+  font-weight: 400;
 }
 
+/* 苹果风格开关 */
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 48px;
-  height: 24px;
+  width: 51px;
+  height: 31px;
 }
 
 .toggle-switch input {
@@ -1417,32 +1864,79 @@ header {
   right: 0;
   bottom: 0;
   background-color: var(--border);
-  transition: .3s;
-  border-radius: 24px;
+  transition: all 0.2s ease;
+  border-radius: 9999px;
+  border: 1px solid transparent;
 }
 
 .toggle-slider:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
+  height: 25px;
+  width: 25px;
+  left: 2px;
+  bottom: 2px;
   background-color: white;
-  transition: .3s;
-  border-radius: 50%;
+  transition: all 0.2s ease;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 input:checked + .toggle-slider {
-  background-color: var(--success);
+  background-color: var(--primary);
 }
 
 input:checked + .toggle-slider:before {
-  transform: translateX(24px);
+  transform: translateX(20px);
 }
 
 input:focus + .toggle-slider {
-  box-shadow: 0 0 1px var(--success);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+}
+
+/* 表单元素优化 */
+textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--card-bg);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+/* 文件输入优化 */
+input[type="file"] {
+  opacity: 0;
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+label.upload-btn {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+label.upload-btn:hover {
+  transform: translateY(-1px);
+}
+
+label.upload-btn:active {
+  transform: translateY(0);
 }
 
 /* 布局结构 */
@@ -1456,7 +1950,7 @@ input:focus + .toggle-slider {
 
 /* 侧边栏通用样式 */
 .sidebar {
-  width: var(--sidebar-width);
+  width: 350px !important;
   background-color: var(--card-bg);
   border-right: 1px solid var(--border);
   display: flex;
@@ -1472,7 +1966,7 @@ input:focus + .toggle-slider {
 }
 
 .sidebar.collapsed {
-  width: 0;
+  width: 0 !important;
   border: none;
 }
 
@@ -1484,7 +1978,7 @@ input:focus + .toggle-slider {
 }
 
 .sidebar-header {
-  padding: 20px;
+  padding: 16px 20px;
   font-weight: 600;
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -1494,19 +1988,22 @@ input:focus + .toggle-slider {
   color: var(--text);
   background-color: var(--card-bg);
   flex-shrink: 0;
+  font-size: 1.1rem;
 }
 .new-quiz-btn {
-  background-color: #1d4ed8;
-  border-color: #1d4ed8;
+  background-color: var(--primary);
+  border-color: var(--primary);
   color: white;
   transform-origin: right center;
+  border-radius: 9999px;
 }
 
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 12px;
   min-height: 0;
+  background-color: var(--card-bg);
 }
 
 .sidebar-footer {
@@ -1522,44 +2019,84 @@ input:focus + .toggle-slider {
   background-color: var(--primary);
   border-color: var(--primary);
   color: white;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  padding: 12px 20px;
+  transition: all 0.2s ease;
+}
+
+.export-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
 }
 
 .sidebar-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .sidebar-item {
   padding: 16px;
-  margin-bottom: 8px;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  border: 1px solid var(--border-light);
-  font-size: 0.9em;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
   position: relative;
-  transition: all 0.3s ease;
-  background-color: var(--card-bg);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: transparent;
   color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  -webkit-tap-highlight-color: transparent;
+  margin-bottom: 0;
+  height: auto;
+  min-height: 120px;
+  overflow: hidden;
+  z-index: 1;
+  align-items: center;
+  text-align: center;
+  transform-origin: top;
+}
+
+.sidebar-item * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-item:hover {
-  background-color: var(--bg);
-  border-color: var(--primary);
+  background-color: var(--card-bg);
+  border-color: var(--border);
   box-shadow: var(--shadow);
+  transform: translateY(-1px);
+  height: auto;
+  min-height: 120px;
 }
 
 .sidebar-item.active {
-  background-color: var(--bg);
-  border-color: var(--primary);
-  color: var(--primary);
+  background-color: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+  height: auto;
+  min-height: 120px;
+}
+
+
+
+.sidebar-item.active .date,
+.sidebar-item.active .quiz-item-title {
+  color: white;
 }
 
 .sidebar-item .date {
-  font-size: 0.8em;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   display: block;
-  margin-top: 6px;
+  margin: 0;
+  font-weight: 400;
 }
 
 .wrong-count {
@@ -1570,47 +2107,141 @@ input:focus + .toggle-slider {
 .quiz-item-title {
   font-weight: 500;
   color: var(--text);
-  margin-bottom: 4px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.score-tag {
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background-color: var(--bg);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.score-tag.good {
+  color: var(--success);
+  background-color: rgba(52, 199, 89, 0.1);
+}
+
+.score-tag.bad {
+  color: var(--danger);
+  background-color: rgba(255, 59, 48, 0.1);
+}
+
+.sidebar-actions {
+  gap: 8px;
+  padding: 0;
+  margin-top: 8px;
+  justify-content: center;
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+  backdrop-filter: none;
+  display: flex;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 10px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+  transform: scale(1);
+}
+
+.action-btn:hover {
+  background-color: var(--primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+.action-btn.delete:hover {
+  background-color: var(--danger);
+  transform: scale(1.1);
+}
+
+.sidebar-item.active .action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.sidebar-item.active .action-btn.delete:hover {
+  background-color: var(--danger);
+}
+
+/* 分组标题优化 */
+.group-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  margin: 4px 8px;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  gap: 8px;
+}
+
+.group-header:hover {
+  background-color: var(--bg);
+}
+
+.group-name {
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.score-tag {
-  float: right;
-  font-weight: 600;
-  font-size: 0.85em;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background-color: var(--bg);
+.group-count {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  font-weight: 400;
 }
-.score-tag.good { color: var(--success); border: 1px solid var(--success); }
-.score-tag.bad { color: var(--danger); border: 1px solid var(--danger); }
 
-.sidebar-actions {
-  position: absolute;
-  right: 8px;
-  top: 8px;
+.group-actions {
   display: none;
   gap: 4px;
-  background-color: var(--card-bg);
-  padding: 2px;
-  border-radius: 6px;
-  box-shadow: var(--shadow);
+  margin-left: auto;
 }
-.sidebar-item:hover .sidebar-actions { display: flex; }
 
-.action-btn {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  font-size: 0.9em;
-  padding: 4px 6px;
-  border-radius: 4px;
-  color: var(--text-secondary);
+.group-header:hover .group-actions {
+  display: flex;
 }
-.action-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
-.action-btn.delete:hover { background-color: var(--danger); border-color: var(--danger); }
+
+/* 优化侧边栏头部按钮布局 */
+.sidebar-header-buttons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sidebar-header-buttons .btn {
+  padding: 6px 12px;
+  font-size: 0.85em;
+  min-height: auto;
+}
 
 .sidebar-toggle-btn {
   position: absolute;
@@ -1697,6 +2328,126 @@ textarea:focus { outline: none; border-color: var(--primary); }
 .parse-error { color: var(--danger); margin-top: 12px; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; }
 .default-title { color: var(--text); text-align: center; margin: 60px 0; font-weight: 500; font-size: 1.4em; width: 100%; }
 .empty-guide { text-align: center; margin-top: 40px; background-color: var(--card-bg); padding: 40px 20px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+
+/* 侧边栏头部按钮样式 */
+.sidebar-header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.new-group-btn {
+  background-color: var(--warning);
+  border-color: var(--warning);
+  color: white;
+}
+
+/* 分组样式 */
+.sidebar-group {
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background-color: var(--card-bg);
+  transition: all 0.3s ease;
+}
+
+.sidebar-group:hover {
+  box-shadow: var(--shadow);
+}
+
+/* 分组头部样式 */
+.group-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--bg);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.group-header:hover {
+  background-color: var(--input-bg);
+}
+
+.group-icon {
+  margin-right: 8px;
+  font-size: 0.7em;
+  color: var(--text-secondary);
+  transition: transform 0.3s ease;
+}
+
+.group-name {
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+.group-count {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+
+.group-actions {
+  display: none;
+  gap: 4px;
+}
+
+.group-header:hover .group-actions {
+  display: flex;
+}
+
+/* 分组内试卷列表样式 */
+.group-quizzes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.group-quiz-item {
+  margin: 4px 8px;
+  border-color: var(--border-light);
+  background-color: var(--input-bg);
+}
+
+.group-quiz-item:hover {
+  border-color: var(--primary);
+}
+
+/* 未分组区域样式 */
+.sidebar-group.ungrouped {
+  margin-top: 16px;
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.sidebar-group.ungrouped .group-header {
+  background-color: transparent;
+  border-bottom: none;
+  padding: 0 8px;
+}
+
+/* 拖拽相关样式 */
+.sidebar-item {
+  cursor: grab;
+  transition: all 0.3s ease;
+}
+
+.sidebar-item:active {
+  cursor: grabbing;
+}
+
+.sidebar-item.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+  box-shadow: var(--shadow-lg);
+}
+
+.sidebar-group.drop-zone {
+  background-color: rgba(74, 124, 89, 0.1);
+  border-color: var(--primary);
+}
 
 /* 下一题按钮样式 */
 .next-question-btn-container {
@@ -1806,53 +2557,193 @@ textarea:focus { outline: none; border-color: var(--primary); }
 /* 题目卡片 */
 .question-card {
   background: var(--card-bg);
-  padding: 28px;
-  border-radius: 16px;
+  padding: 24px;
+  border-radius: 20px;
   box-shadow: var(--shadow);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   border: 1px solid var(--border);
   border-left: 6px solid transparent;
   width: 100%;
   max-width: 850px;
   box-sizing: border-box;
   text-align: left;
+  transition: all 0.3s ease;
 }
 
-.question-card.status-correct { border-left-color: var(--success); background-color: rgba(16, 185, 129, 0.05); }
-.question-card.status-wrong { border-left-color: var(--danger); background-color: rgba(239, 68, 68, 0.05); }
+.question-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
 
-.q-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 12px; }
+.question-card.status-correct {
+  border-left-color: var(--success);
+  background-color: rgba(52, 199, 89, 0.05);
+}
+
+.question-card.status-wrong {
+  border-left-color: var(--danger);
+  background-color: rgba(255, 59, 48, 0.05);
+}
+
+.q-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
 
 .remove-btn {
   font-size: 0.85em;
-  padding: 6px 12px;
+  padding: 6px 14px;
   white-space: nowrap;
 }
-.q-index { font-weight: 600; font-size: 1.1em; color: var(--text); flex: 1; }
 
-.q-content { font-size: 1.1em; margin-bottom: 24px; line-height: 1.7; color: var(--text); }
-:deep(.q-content img) { max-width: 100%; height: auto; border-radius: 8px; }
-:deep(.q-content table) { width: 100%; overflow-x: auto; display: block; border-collapse: collapse; }
-:deep(.q-content table th), :deep(.q-content table td) { border: 1px solid var(--border); padding: 8px; }
+.q-index {
+  font-weight: 600;
+  font-size: 1.1em;
+  color: var(--text);
+  flex: 1;
+}
 
-.options-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.q-content {
+  font-size: 1.125em;
+  margin-bottom: 20px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+:deep(.q-content img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 12px 0;
+}
+
+:deep(.q-content table) {
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+:deep(.q-content table th),
+:deep(.q-content table td) {
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  font-size: 0.9em;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
 
 .option-label {
   display: flex;
   align-items: flex-start;
-  padding: 16px;
+  padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: 12px;
   cursor: pointer;
   background-color: var(--card-bg);
   color: var(--text);
-  /* 防止手机点击高亮背景太丑 */
+  transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.option-label:hover { background-color: var(--bg); border-color: var(--primary); }
-.option-label input { margin-top: 4px; margin-right: 12px; accent-color: var(--primary); transform: scale(1.2); }
-.option-text { line-height: 1.5; color: var(--text); word-break: break-word; }
+.option-label:hover {
+  background-color: var(--bg);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.option-label:active {
+  transform: translateY(0);
+}
+
+.option-label input {
+  margin-top: 4px;
+  margin-right: 14px;
+  accent-color: var(--primary);
+  transform: scale(1.15);
+}
+
+.option-text {
+  font-size: 1em;
+  line-height: 1.5;
+  color: var(--text);
+  word-break: break-word;
+  flex: 1;
+}
+
+/* 正确选项高亮 */
+.option-label.correct-option {
+  background-color: rgba(52, 199, 89, 0.05);
+  border-color: var(--success);
+}
+
+/* 单题模式优化 */
+.question-card.single-mode {
+  margin-bottom: 0;
+}
+
+/* 短答案输入框优化 */
+.short-answer-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--input-bg);
+  color: var(--text);
+  font-size: 1em;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.short-answer-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--card-bg);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+/* 结果分析区域优化 */
+.result-analysis {
+  background-color: var(--bg);
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.result-analysis p {
+  margin: 8px 0;
+}
+
+.result-analysis strong {
+  font-weight: 600;
+}
+
+.explanation-box {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.explanation-box strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* 正确选项的绿色样式 */
+.correct-option {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: var(--success);
+  border-left: 4px solid var(--success);
+}
 .option-text b { color: var(--primary); font-weight: 600; margin-right: 4px; }
 
 .short-answer-input {
@@ -1878,24 +2769,320 @@ textarea:focus { outline: none; border-color: var(--primary); }
 .tag.mode-badge { background: var(--danger); color: white; padding: 2px 6px; font-size: 0.75em; }
 
 .btn {
-  background-color: var(--primary); color: white; border: none; padding: 10px 20px;
-  border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600;
-  transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  min-width: 44px;
+  -webkit-tap-highlight-color: transparent;
 }
-.btn.secondary { background-color: var(--text-secondary); }
-.btn.sm { padding: 6px 12px; font-size: 0.85em; }
-.btn.full-width { width: 100%; padding: 14px; font-size: 1.1em; }
-.shadow-btn { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+.btn:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn.secondary {
+  background-color: var(--border);
+  color: var(--text);
+}
+
+.btn.secondary:hover {
+  background-color: var(--border-light);
+}
+
+.btn.sm {
+  padding: 6px 14px;
+  font-size: 0.875em;
+  min-height: 30px;
+}
+
+.btn.full-width {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 1em;
+  min-height: 44px;
+}
+
+.btn.active {
+  background-color: var(--primary);
+  color: white;
+}
+
+.shadow-btn {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 图标按钮优化 */
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 1.5rem;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  min-width: 44px;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.icon-btn:hover {
+  background-color: var(--border-light);
+}
+
+.icon-btn:active {
+  background-color: var(--border);
+}
+
+/* 主题切换按钮优化 */
+.theme-toggle {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-size: 1.3rem;
+  outline: none;
+  transition: all 0.2s ease;
+  min-width: 44px;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-toggle:hover {
+  background-color: var(--border-light);
+  border-color: var(--border-light);
+}
+
+.theme-toggle:active {
+  background-color: var(--border);
+}
+
+/* 动画和过渡效果 */
+
+/* 渐入动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 滑入动画 */
+@keyframes slideInFromLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* 淡入淡出动画 */
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+/* 弹性动画 */
+@keyframes bounceIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
 
 /* 移动端遮罩 */
 .mobile-backdrop {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5); z-index: 40;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
   backdrop-filter: blur(2px);
   animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* 侧边栏动画 */
+.sidebar {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.mobile-open {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.right-sidebar.mobile-open {
+  animation: slideInFromRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 题目卡片动画 */
+.question-card {
+  animation: fadeIn 0.3s ease;
+}
+
+/* 模态框动画 */
+.modal-overlay {
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  animation: slideInFromBottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 选项动画 */
+.option-label {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 按钮动画 */
+.btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 分组展开/折叠动画 */
+.group-header:not(.expanded) + .group-quizzes {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.group-header {
+  transition: all 0.2s ease;
+}
+
+/* 多选提示动画 */
+.multi-choice-hint {
+  animation: slideInFromTop 0.3s ease;
+}
+
+@keyframes slideInFromTop {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 加载状态动画 */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading {
+  animation: pulse 1.5s infinite;
+}
+
+/* 单题模式样式 */
+.question-progress {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 auto;
+  color: white;
+  background-color: var(--danger);
+  padding: 10px 40px;
+  border-radius: 9999px;
+  text-align: center;
+  width: fit-content;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+.progress-fade-enter-active,
+.progress-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-fade-enter-from {
+  opacity: 0;
+  transform: scale(0.9) translateY(-10px);
+}
+
+.progress-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.9) translateY(-10px);
+}
+
+.progress-fade-enter-to,
+.progress-fade-leave-from {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.actions-slide-enter-active,
+.actions-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.actions-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+  max-height: 0;
+}
+
+.actions-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+  max-height: 0;
+}
+
+.actions-slide-enter-to,
+.actions-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 50px;
+  margin-top: 12px;
+}
+
+.single-mode-nav-btns {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  gap: 16px;
+}
+
+.single-mode-nav-btns .prev-btn {
+  width: auto;
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+.single-mode-nav-btns .next-btn {
+  width: auto;
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+.question-card.single-mode {
+  margin: 0 auto;
+  max-width: 850px;
+}
 
 /* ==========================================================================
    移动端响应式样式 (Max Width 768px)
@@ -1973,7 +3160,8 @@ textarea:focus { outline: none; border-color: var(--primary); }
   .sidebar-header { padding: 16px; }
   .new-quiz-btn { font-size: 0.75em; padding: 100px 8px; }
   .sidebar-toggle-btn { display: none; } /* 隐藏原有的侧边切换条 */
-  .sidebar-actions { display: flex; position: static; margin-top: 8px; justify-content: flex-end; background: transparent; box-shadow: none; } /* 移动端直接显示操作按钮 */
+  .sidebar-item { height: auto; overflow: visible; } /* 移动端取消固定高度 */
+  .sidebar-actions { display: flex; position: static; margin-top: 8px; justify-content: flex-end; background: transparent; box-shadow: none; border: none; gap: 8px; padding: 0; } /* 移动端直接显示操作按钮 */
 
   /* 题目卡片 */
   .question-card { padding: 20px 16px; margin-bottom: 16px; border-radius: 12px; }
@@ -2030,33 +3218,38 @@ textarea:focus { outline: none; border-color: var(--primary); }
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-content {
   background-color: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
   color: var(--text);
+  animation: slideInFromBottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
 .modal-header {
-  padding: 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
 }
 
 .modal-header h3 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
+  flex: 1;
 }
 
 .modal-close {
@@ -2065,54 +3258,97 @@ textarea:focus { outline: none; border-color: var(--primary); }
   font-size: 1.5rem;
   cursor: pointer;
   color: var(--text-secondary);
-  padding: 0;
-  width: 30px;
-  height: 30px;
+  padding: 8px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-close:hover {
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 24px;
   flex: 1;
   overflow-y: auto;
 }
 
 .modal-footer {
-  padding: 20px;
+  padding: 20px 24px;
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  background-color: var(--card-bg);
 }
 
 .modal-actions {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
+  justify-content: flex-end;
 }
 
 .quiz-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .quiz-item-checkbox {
   display: flex;
   align-items: flex-start;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background-color: var(--card-bg);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.quiz-item-checkbox:hover {
+  background-color: var(--bg);
+  border-color: var(--primary);
 }
 
 .quiz-item-checkbox input {
   margin-top: 4px;
-  margin-right: 12px;
+  margin-right: 14px;
   accent-color: var(--primary);
-  transform: scale(1.2);
+  transform: scale(1.15);
+  cursor: pointer;
+}
+
+/* 模态框内的表单元素优化 */
+.modal-body textarea,
+.modal-body input[type="text"],
+.modal-body input[type="number"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+
+.modal-body textarea:focus,
+.modal-body input[type="text"]:focus,
+.modal-body input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--card-bg);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
 }
 
 .quiz-item-checkbox label {

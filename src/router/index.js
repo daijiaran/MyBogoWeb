@@ -8,6 +8,7 @@ import ArticleView from "@/views/ArticleView.vue";
 import UserView from "@/views/UserView.vue";
 import LogView from "@/views/LogView.vue";   // 管理页面组件
 import ExamTool from "@/components/Pages/quiz-app-container.vue"
+import SQLView from "@/components/Pages/SQL.vue"
 
 const routes = [
     {
@@ -50,6 +51,11 @@ const routes = [
         path: '/user',
         name: 'User',
         component: UserView
+    },
+    {
+        path: '/sql',
+        name: 'SQL',
+        component: SQLView
     }
 
 ]

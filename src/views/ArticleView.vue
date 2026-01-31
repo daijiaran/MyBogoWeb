@@ -7,14 +7,15 @@
           :style="{ width: leftPanelWidth + '%' }"
           ref="leftPanelRef"
       >
-        <div class="markdown-view">
+        <div class="markdown-view" ref="markdownViewRef">
           <!-- 缩放容器 -->
           <div
               class="content-wrapper"
+              ref="contentWrapperRef"
               :style="{
                 transform: `scale(${scaleRatio})`,
-                transformOrigin: 'top center',
-                transition: 'transform 0.2s ease',
+                transformOrigin: transformOrigin,
+                transition: 'transform 0.1s ease',
                 display: 'inline-block',
                 width: '100%',
                 boxSizing: 'border-box'
@@ -240,9 +241,12 @@ const replyInputWidth = ref(0);
 
 // 左侧浏览区缩放相关状态
 const leftPanelRef = ref(null);
+const markdownViewRef = ref(null);
+const contentWrapperRef = ref(null);
 const scaleRatio = ref(1.0);
 const scaleStep = ref(0.1);
 const isCtrlPressed = ref(false);
+const transformOrigin = ref('top center');
 
 // 获取文章详情
 const fetchArticleDetail = async () => {
@@ -343,6 +347,23 @@ watch(rightPanelWidth, () => {
 }, {immediate: false});
 
 // 左侧浏览区缩放逻辑
+const updateTransformOrigin = () => {
+  if (!markdownViewRef.value || !contentWrapperRef.value) return;
+  
+  const viewRect = markdownViewRef.value.getBoundingClientRect();
+  const wrapperRect = contentWrapperRef.value.getBoundingClientRect();
+  
+  const viewScrollTop = markdownViewRef.value.scrollTop;
+  const viewHeight = viewRect.height;
+  
+  const visibleCenterY = viewScrollTop + viewHeight / 2;
+  const centerX = wrapperRect.width / 2;
+  
+  const relativeY = visibleCenterY - (wrapperRect.top - viewRect.top);
+  
+  transformOrigin.value = `${centerX}px ${relativeY}px`;
+};
+
 const handleKeyDown = (e) => {
   if (e.ctrlKey || e.metaKey) {
     isCtrlPressed.value = true;
@@ -359,6 +380,8 @@ const handleLeftPanelWheel = (e) => {
   if (isCtrlPressed.value) {
     e.preventDefault();
     e.stopPropagation();
+
+    updateTransformOrigin();
 
     const delta = e.deltaY > 0 ? -scaleStep.value : scaleStep.value;
     scaleRatio.value = Math.min(Math.max(scaleRatio.value + delta, 0.5), 2.0);
@@ -473,6 +496,7 @@ const handleSubmitComment = async () => {
 const handleResize = () => {
   checkIsMobile();
   updateReplyInputWidth();
+  updateTransformOrigin();
 };
 
 // 挂载时初始化
@@ -489,10 +513,15 @@ onMounted(() => {
     leftPanelRef.value.addEventListener('wheel', handleLeftPanelWheel, {passive: false});
   }
 
+  if (markdownViewRef.value) {
+    markdownViewRef.value.addEventListener('scroll', updateTransformOrigin);
+  }
+
   fetchArticleDetail();
 
   setTimeout(() => {
     updateReplyInputWidth();
+    updateTransformOrigin();
     const textareas = [commentTextareaRef.value, mobileCommentTextareaRef.value].filter(Boolean);
     textareas.forEach(textarea => {
       if (textarea) {
